@@ -3,8 +3,6 @@ import hexdocs_search/environment
 
 const search_url = "https://search.hexdocs.pm"
 
-const staging_search_url = "https://search.staging.hexdocs.pm/?q="
-
 const hexdocs_url = "https://hexdocs.pm"
 
 const hexpm_url = "https://hex.pm"
@@ -13,7 +11,7 @@ pub fn search() -> Uri {
   let assert Ok(uri) = {
     case environment.read() {
       environment.Production -> search_url
-      _ -> staging_search_url
+      _ -> search_url
     }
     |> uri.parse
   }

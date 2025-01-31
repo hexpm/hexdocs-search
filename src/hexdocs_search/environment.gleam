@@ -1,6 +1,6 @@
-import envoy
 import gleam/result
-import gleam/string
+import window
+import window/location
 
 pub type Environment {
   Development
@@ -13,10 +13,11 @@ pub type Environment {
 /// `GLEAM_ENV` is missing, it fallback automatically on `Production` to avoid
 /// potential leaking of critical data.
 pub fn read() {
-  let value = envoy.get("GLEAM_ENV") |> result.map(string.lowercase)
-  case value {
-    Ok("development") -> Development
-    Ok("staging") -> Staging
+  let location = window.location()
+  let hostname = result.map(location, location.hostname)
+  case hostname {
+    Ok("localhost") -> Development
+    Ok("staging" <> _) -> Staging
     _ -> Production
   }
 }

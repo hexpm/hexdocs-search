@@ -29,3 +29,10 @@ pub fn subscribe_blurred_search() {
     }),
   )
 }
+
+pub fn typesense_search(query: String, packages: List(String)) {
+  use dispatch <- effect.from()
+  use _ <- function.tap(Nil)
+  use response <- promise.map(hexdocs.typesense_search(query, packages, 1))
+  dispatch(msg.ApiReturnedTypesenseSearch(response))
+}

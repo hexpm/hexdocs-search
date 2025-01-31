@@ -2,31 +2,45 @@ import gleam/bool
 import gleam/option.{type Option, None, Some}
 import gleam/pair
 import gleam/string
+import gleam/uri
 import hexdocs_search/data/model/autocomplete.{type Autocomplete}
 import hexdocs_search/services/hex
+import hexdocs_search/services/hexdocs
 import lustre/effect
 
 pub type Model {
   Model(
     packages: List(String),
     search: String,
+    search_input: String,
     displayed: String,
     search_focused: Bool,
     autocomplete: Option(Autocomplete),
     package_versions: Option(hex.Package),
     dom_click_unsubscriber: Option(fn() -> Nil),
+    search_result: Option(#(Int, List(hexdocs.TypeSense))),
+    route: Route,
   )
+}
+
+pub type Route {
+  Home
+  Search
+  NotFound
 }
 
 pub fn new() -> Model {
   Model(
     packages: [],
     search: "",
+    search_input: "",
     displayed: "",
     search_focused: False,
     autocomplete: None,
     package_versions: None,
     dom_click_unsubscriber: None,
+    search_result: None,
+    route: Home,
   )
 }
 
@@ -46,6 +60,16 @@ pub fn focus_search(model: Model) {
 
 pub fn select_package(model: Model, package: String) {
   Model(..model, search: package, displayed: package, autocomplete: None)
+}
+
+pub fn update_route(model: Model, location: uri.Uri) {
+  Model(..model, route: {
+    case uri.path_segments(location.path) {
+      [""] -> Home
+      ["search"] -> Search
+      _ -> NotFound
+    }
+  })
 }
 
 pub fn blur_search(model: Model) {

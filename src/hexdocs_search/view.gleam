@@ -16,12 +16,14 @@ import lustre/event
 pub fn view(model: Model) {
   html.div([], [
     html.text("Hexdocs"),
-    html.input([
-      attribute.value(model.displayed),
-      event.on_input(msg.UserEditedSearch),
-      event.on("click", utils.stop_propagation),
-      event.on_focus(msg.UserFocusedSearch),
-      event.on("keydown", on_arrow_up_down),
+    html.form([event.on_submit(msg.UserSubmittedSearch)], [
+      html.input([
+        attribute.value(model.displayed),
+        event.on_input(msg.UserEditedSearch),
+        event.on("click", utils.stop_propagation),
+        event.on_focus(msg.UserFocusedSearch),
+        event.on("keydown", on_arrow_up_down),
+      ]),
     ]),
     autocomplete(model),
     package_versions(model),

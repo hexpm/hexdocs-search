@@ -12,4 +12,5 @@ pub type Msg {
   UserNextAutocompletePackageSelected
   UserPreviousAutocompletePackageSelected
   UserSelectedAutocompletePackage(package: String)
+  UserSubmittedSearch
 }

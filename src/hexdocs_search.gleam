@@ -68,6 +68,12 @@ fn update(model: Model, msg: Msg) {
         effect.batch([effects.package_versions(package), effects])
       })
     }
+
+    msg.UserSubmittedSearch -> {
+      let #(model, effects) = model.blur_search(model)
+      let package = model.displayed
+      #(model, effect.batch([effects.package_versions(package), effects]))
+    }
   }
 }
 

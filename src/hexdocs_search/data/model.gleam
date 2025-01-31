@@ -1,7 +1,10 @@
 import gleam/bool
 import gleam/option.{type Option, None, Some}
+import gleam/pair
 import gleam/string
 import hexdocs_search/data/model/autocomplete.{type Autocomplete}
+import hexdocs_search/services/hex
+import lustre/effect
 
 pub type Model {
   Model(
@@ -10,6 +13,8 @@ pub type Model {
     displayed: String,
     search_focused: Bool,
     autocomplete: Option(Autocomplete),
+    package_versions: Option(hex.Package),
+    dom_click_unsubscriber: Option(fn() -> Nil),
   )
 }
 
@@ -20,6 +25,8 @@ pub fn new() -> Model {
     displayed: "",
     search_focused: False,
     autocomplete: None,
+    package_versions: None,
+    dom_click_unsubscriber: None,
   )
 }
 
@@ -37,13 +44,24 @@ pub fn focus_search(model: Model) {
   |> autocomplete_packages
 }
 
+pub fn select_package(model: Model, package: String) {
+  Model(..model, search: package, displayed: package, autocomplete: None)
+}
+
 pub fn blur_search(model: Model) {
   Model(
     ..model,
     search_focused: False,
     autocomplete: None,
     search: model.displayed,
+    dom_click_unsubscriber: None,
   )
+  |> pair.new({
+    use _ <- effect.from()
+    let none = fn() { Nil }
+    let unsubscriber = option.unwrap(model.dom_click_unsubscriber, none)
+    unsubscriber()
+  })
 }
 
 pub fn autocomplete_packages(model: Model) {

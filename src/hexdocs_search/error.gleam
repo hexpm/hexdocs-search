@@ -1,4 +1,5 @@
 import gleam
+import gleam/dynamic/decode
 import gleam/fetch
 
 pub type Result(a) =
@@ -6,4 +7,5 @@ pub type Result(a) =
 
 pub type HexdocsSearchError {
   FetchError(fetch.FetchError)
+  DecodeError(List(decode.DecodeError))
 }

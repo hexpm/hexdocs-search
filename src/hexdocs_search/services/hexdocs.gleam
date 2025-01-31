@@ -26,18 +26,15 @@ mimerl
   |> promise.resolve
 }
 
-pub fn get_packages() {
+pub fn packages() {
   case environment.read() {
     environment.Development -> packages_mock()
     environment.Staging | environment.Production -> {
       let endpoint = endpoints.packages()
       let assert Ok(request) = request.from_uri(endpoint)
-      let response =
-        fetch.send(request) |> promise.try_await(fetch.read_text_body)
-      use response <- promise.await(response)
-      response
-      |> result.map_error(error.FetchError)
-      |> promise.resolve
+      fetch.send(request)
+      |> promise.try_await(fetch.read_text_body)
+      |> promise.map(result.map_error(_, error.FetchError))
     }
   }
 }

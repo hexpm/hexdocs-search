@@ -40,74 +40,99 @@ fn home(model: Model) {
 }
 
 fn search(model: Model) {
-  html.div([], [
-    html.text("Search"),
-    html.form([event.on_submit(msg.UserSubmittedSearchInput)], [
-      html.input([
-        attribute.value(model.search_input),
-        event.on_input(msg.UserEditedSearchInput),
+  html.div([attribute.style([#("display", "flex")])], [
+    html.div([], [
+      html.text("Select packages"),
+      html.form([event.on_submit(msg.UserSubmittedPackagesFilter)], [
+        html.input([
+          attribute.value(model.packages_filter_input),
+          event.on_input(msg.UserEditedPackagesFilter),
+        ]),
       ]),
-    ]),
-    case model.search_result {
-      None -> element.none()
-      Some(results) ->
+      html.div([], {
+        use filter <- list.map(model.packages_filter)
         html.div([], [
-          html.text("Results"),
-          html.div([], [html.text(int.to_string(results.0) <> " found")]),
-          html.div([], {
-            use type_sense <- list.map(results.1)
-            html.div(
-              [
-                attribute.style([
-                  #("border-radius", "10px"),
-                  #("padding", "10px"),
-                  #("box-shadow", "0px 0px 0px 3px #eee"),
-                  #("display", "flex"),
-                  #("flex-direction", "column"),
-                  #("gap", "10px"),
-                ]),
-              ],
-              [
-                html.div([], [html.text("title: " <> type_sense.document.title)]),
-                html.div([], [html.text("type: " <> type_sense.document.type_)]),
-                html.div([], [
-                  html.text("package: " <> type_sense.document.package),
-                ]),
-                html.div([], [
-                  html.text("proglang: " <> type_sense.document.proglang),
-                ]),
-                html.div([], [html.text("doc: " <> type_sense.document.doc)]),
-                case type_sense.highlight.title {
-                  None -> element.none()
-                  Some(t) ->
-                    html.div(
-                      [
-                        attribute.attribute(
-                          "dangerous-unescaped-html",
-                          t.snippet,
-                        ),
-                      ],
-                      [],
-                    )
-                },
-                case type_sense.highlight.doc {
-                  None -> element.none()
-                  Some(t) ->
-                    html.div(
-                      [
-                        attribute.attribute(
-                          "dangerous-unescaped-html",
-                          t.snippet,
-                        ),
-                      ],
-                      [],
-                    )
-                },
-              ],
-            )
-          }),
+          html.text(filter),
+          html.button(
+            [event.on_click(msg.UserSuppressedPackagesFilter(filter))],
+            [html.text("Remove")],
+          ),
         ])
-    },
+      }),
+    ]),
+    html.div([], [
+      html.text("Search"),
+      html.form([event.on_submit(msg.UserSubmittedSearchInput)], [
+        html.input([
+          attribute.value(model.search_input),
+          event.on_input(msg.UserEditedSearchInput),
+        ]),
+      ]),
+      case model.search_result {
+        None -> element.none()
+        Some(results) ->
+          html.div([], [
+            html.text("Results"),
+            html.div([], [html.text(int.to_string(results.0) <> " found")]),
+            html.div([], {
+              use type_sense <- list.map(results.1)
+              html.div(
+                [
+                  attribute.style([
+                    #("border-radius", "10px"),
+                    #("padding", "10px"),
+                    #("box-shadow", "0px 0px 0px 3px #eee"),
+                    #("display", "flex"),
+                    #("flex-direction", "column"),
+                    #("gap", "10px"),
+                  ]),
+                ],
+                [
+                  html.div([], [
+                    html.text("title: " <> type_sense.document.title),
+                  ]),
+                  html.div([], [
+                    html.text("type: " <> type_sense.document.type_),
+                  ]),
+                  html.div([], [
+                    html.text("package: " <> type_sense.document.package),
+                  ]),
+                  html.div([], [
+                    html.text("proglang: " <> type_sense.document.proglang),
+                  ]),
+                  html.div([], [html.text("doc: " <> type_sense.document.doc)]),
+                  case type_sense.highlight.title {
+                    None -> element.none()
+                    Some(t) ->
+                      html.div(
+                        [
+                          attribute.attribute(
+                            "dangerous-unescaped-html",
+                            t.snippet,
+                          ),
+                        ],
+                        [],
+                      )
+                  },
+                  case type_sense.highlight.doc {
+                    None -> element.none()
+                    Some(t) ->
+                      html.div(
+                        [
+                          attribute.attribute(
+                            "dangerous-unescaped-html",
+                            t.snippet,
+                          ),
+                        ],
+                        [],
+                      )
+                  },
+                ],
+              )
+            }),
+          ])
+      },
+    ]),
   ])
 }
 

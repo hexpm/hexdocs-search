@@ -20,6 +20,8 @@ pub type Model {
     dom_click_unsubscriber: Option(fn() -> Nil),
     search_result: Option(#(Int, List(hexdocs.TypeSense))),
     route: Route,
+    packages_filter: List(String),
+    packages_filter_input: String,
   )
 }
 
@@ -41,6 +43,8 @@ pub fn new() -> Model {
     dom_click_unsubscriber: None,
     search_result: None,
     route: Home,
+    packages_filter: [],
+    packages_filter_input: "",
   )
 }
 

@@ -1,6 +1,7 @@
 import gleam/dynamic/decode
 import gleam/http/response.{type Response}
 import gleam/io
+import gleam/list
 import gleam/option.{Some}
 import gleam/pair
 import gleam/string
@@ -75,7 +76,10 @@ fn update(model: Model, msg: Msg) {
     }
 
     msg.UserSubmittedSearchInput -> {
-      #(model, effects.typesense_search(model.search_input, []))
+      #(
+        model,
+        effects.typesense_search(model.search_input, model.packages_filter),
+      )
     }
 
     msg.UserBlurredSearch -> {
@@ -114,6 +118,34 @@ fn update(model: Model, msg: Msg) {
       let #(model, effects) = model.blur_search(model)
       let package = model.displayed
       #(model, effect.batch([effects.package_versions(package), effects]))
+    }
+
+    msg.UserEditedPackagesFilter(packages_filter_input:) -> {
+      #(Model(..model, packages_filter_input:), effect.none())
+    }
+
+    msg.UserSubmittedPackagesFilter -> {
+      let packages_filter =
+        list.reverse(model.packages_filter)
+        |> list.prepend(model.packages_filter_input)
+        |> list.reverse
+        |> list.unique
+      #(
+        Model(..model, packages_filter:, packages_filter_input: ""),
+        effect.none(),
+      )
+    }
+
+    msg.UserSuppressedPackagesFilter(filter:) -> {
+      #(
+        Model(
+          ..model,
+          packages_filter: list.filter(model.packages_filter, fn(f) {
+            f != filter
+          }),
+        ),
+        effect.none(),
+      )
     }
   }
 }

@@ -79,7 +79,7 @@ pub fn typesense_search(query: String, packages: List(String), page: Int) {
     |> case packages {
       [] -> function.identity
       packages -> {
-        let packages = "package:" <> string.join(packages, with: ",")
+        let packages = "package: [" <> string.join(packages, with: ", ") <> "]"
         list.key_set(_, "filter_by", packages)
       }
     }

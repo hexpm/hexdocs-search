@@ -19,4 +19,7 @@ pub type Msg {
   UserSubmittedSearch
   UserEditedSearchInput(search_input: String)
   UserSubmittedSearchInput
+  UserSubmittedPackagesFilter
+  UserEditedPackagesFilter(packages_filter_input: String)
+  UserSuppressedPackagesFilter(filter: String)
 }

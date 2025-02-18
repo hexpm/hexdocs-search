@@ -85,7 +85,7 @@ pub fn set_search_results(
 pub fn update_route(model: Model, location: uri.Uri) {
   Model(..model, route: {
     case uri.path_segments(location.path) {
-      [""] -> Home
+      [] -> Home
       ["search"] -> Search
       _ -> NotFound
     }

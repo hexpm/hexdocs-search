@@ -2,7 +2,7 @@ import gleam
 import gleam/dynamic/decode
 import gleam/fetch
 
-pub type Result(a) =
+pub type Loss(a) =
   gleam.Result(a, HexdocsSearchError)
 
 pub type HexdocsSearchError {

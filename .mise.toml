@@ -1,6 +1,6 @@
 [tools]
-gleam = "1.7.0"
-erlang = "27.2"
+gleam = "1.8.1"
+erlang = "27"
 
 [env]
 GLEAM_ENV = "development"

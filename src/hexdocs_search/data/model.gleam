@@ -52,6 +52,10 @@ pub fn add_packages(model: Model, packages: List(String)) {
   Model(..model, packages:)
 }
 
+pub fn set_packages_filter(model: Model, packages_filter: List(String)) {
+  Model(..model, packages_filter:)
+}
+
 pub fn update_search(model: Model, search: String) {
   Model(..model, search:, displayed: search)
   |> autocomplete_packages
@@ -64,6 +68,18 @@ pub fn focus_search(model: Model) {
 
 pub fn select_package(model: Model, package: String) {
   Model(..model, search: package, displayed: package, autocomplete: None)
+}
+
+pub fn set_packages_filter_input(model: Model, packages_filter_input: String) {
+  Model(..model, packages_filter_input:)
+}
+
+pub fn set_search_results(
+  model: Model,
+  search_result: #(Int, List(hexdocs.TypeSense)),
+) {
+  let search_result = Some(search_result)
+  Model(..model, search_result:)
 }
 
 pub fn update_route(model: Model, location: uri.Uri) {

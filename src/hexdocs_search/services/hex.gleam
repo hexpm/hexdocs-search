@@ -6,7 +6,7 @@ import gleam/http/response
 import gleam/javascript/promise
 import gleam/result
 import hexdocs_search/endpoints
-import hexdocs_search/error
+import hexdocs_search/loss
 
 pub type Package {
   Package(
@@ -21,7 +21,7 @@ pub fn package_versions(name: String) {
   let assert Ok(request) = request.from_uri(endpoint)
   fetch.send(request)
   |> promise.try_await(fetch.read_json_body)
-  |> promise.map(result.map_error(_, error.FetchError))
+  |> promise.map(result.map_error(_, loss.FetchError))
   |> promise.try_await(fn(res) {
     decode.list(decode.at(["version"], decode.string))
     |> decode.at(["releases"], _)
@@ -34,7 +34,7 @@ pub fn package_versions(name: String) {
         response.Response(..res, body: Package(name:, versions:, retirements:))
       })
     })
-    |> result.map_error(error.DecodeError)
+    |> result.map_error(loss.DecodeError)
     |> promise.resolve
   })
 }

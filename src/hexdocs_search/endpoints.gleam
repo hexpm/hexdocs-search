@@ -1,5 +1,4 @@
 import gleam/uri.{type Uri}
-import hexdocs_search/environment
 
 const search_url = "https://search.hexdocs.pm"
 
@@ -8,13 +7,7 @@ const hexdocs_url = "https://hexdocs.pm"
 const hexpm_url = "https://hex.pm"
 
 pub fn search() -> Uri {
-  let assert Ok(uri) = {
-    case environment.read() {
-      environment.Production -> search_url
-      _ -> search_url
-    }
-    |> uri.parse
-  }
+  let assert Ok(uri) = uri.parse(search_url)
   uri
 }
 

@@ -1,9 +1,4 @@
-export function addDocumentListener(callback_) {
-  const callback = (e) => {
-    console.log(e)
-    console.log("urn")
-    callback_()
-  }
+export function addDocumentListener(callback) {
   document.addEventListener("click", callback, { once: true })
   return () => document.removeEventListener("click", callback)
 }

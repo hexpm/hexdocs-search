@@ -8,6 +8,7 @@ import gleam/string
 import hexdocs_search/data/model.{type Model}
 import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/msg
+import hexdocs_search/services/hexdocs
 import hexdocs_search/utils
 import lustre/attribute
 import lustre/element
@@ -49,16 +50,7 @@ fn search(model: Model) {
           event.on_input(msg.UserEditedPackagesFilter),
         ]),
       ]),
-      html.div([], {
-        use filter <- list.map(model.packages_filter)
-        html.div([], [
-          html.text(filter),
-          html.button(
-            [event.on_click(msg.UserSuppressedPackagesFilter(filter))],
-            [html.text("Remove")],
-          ),
-        ])
-      }),
+      search_filter_pills(model),
     ]),
     html.div([], [
       html.text("Search"),
@@ -70,69 +62,52 @@ fn search(model: Model) {
       ]),
       case model.search_result {
         None -> element.none()
-        Some(results) ->
-          html.div([], [
-            html.text("Results"),
-            html.div([], [html.text(int.to_string(results.0) <> " found")]),
-            html.div([], {
-              use type_sense <- list.map(results.1)
-              html.div(
-                [
-                  attribute.style([
-                    #("border-radius", "10px"),
-                    #("padding", "10px"),
-                    #("box-shadow", "0px 0px 0px 3px #eee"),
-                    #("display", "flex"),
-                    #("flex-direction", "column"),
-                    #("gap", "10px"),
-                  ]),
-                ],
-                [
-                  html.div([], [
-                    html.text("title: " <> type_sense.document.title),
-                  ]),
-                  html.div([], [
-                    html.text("type: " <> type_sense.document.type_),
-                  ]),
-                  html.div([], [
-                    html.text("package: " <> type_sense.document.package),
-                  ]),
-                  html.div([], [
-                    html.text("proglang: " <> type_sense.document.proglang),
-                  ]),
-                  html.div([], [html.text("doc: " <> type_sense.document.doc)]),
-                  case type_sense.highlight.title {
-                    None -> element.none()
-                    Some(t) ->
-                      html.div(
-                        [
-                          attribute.attribute(
-                            "dangerous-unescaped-html",
-                            t.snippet,
-                          ),
-                        ],
-                        [],
-                      )
-                  },
-                  case type_sense.highlight.doc {
-                    None -> element.none()
-                    Some(t) ->
-                      html.div(
-                        [
-                          attribute.attribute(
-                            "dangerous-unescaped-html",
-                            t.snippet,
-                          ),
-                        ],
-                        [],
-                      )
-                  },
-                ],
-              )
-            }),
-          ])
+        Some(results) -> search_results(results)
       },
     ]),
+  ])
+}
+
+fn search_filter_pills(model: Model) {
+  html.div([], {
+    use filter <- list.map(model.packages_filter)
+    html.div([], [
+      html.text(filter),
+      html.button([event.on_click(msg.UserSuppressedPackagesFilter(filter))], [
+        html.text("Remove"),
+      ]),
+    ])
+  })
+}
+
+fn search_results(results: #(Int, List(hexdocs.TypeSense))) {
+  html.div([], [
+    html.text("Results"),
+    html.div([], [html.text(int.to_string(results.0) <> " found")]),
+    html.div([], {
+      use type_sense <- list.map(results.1)
+      html.div(
+        [
+          attribute.style([
+            #("border-radius", "10px"),
+            #("padding", "10px"),
+            #("box-shadow", "0px 0px 0px 3px #eee"),
+            #("display", "flex"),
+            #("flex-direction", "column"),
+            #("gap", "10px"),
+          ]),
+        ],
+        [
+          html.div([], [html.text("title: " <> type_sense.document.title)]),
+          html.div([], [html.text("type: " <> type_sense.document.type_)]),
+          html.div([], [html.text("package: " <> type_sense.document.package)]),
+          html.div([], [html.text("proglang: " <> type_sense.document.proglang)]),
+          html.div([], [html.text("doc: " <> type_sense.document.doc)]),
+          snippet(type_sense.highlight.title),
+          snippet(type_sense.highlight.doc),
+        ],
+      )
+    }),
   ])
 }
 
@@ -145,8 +120,8 @@ fn on_arrow_up_down(event: decode.Dynamic) {
     False -> Nil
   }
   case key {
-    "ArrowDown" -> Ok(msg.UserNextAutocompletePackageSelected)
-    "ArrowUp" -> Ok(msg.UserPreviousAutocompletePackageSelected)
+    "ArrowDown" -> Ok(msg.UserSelectedNextAutocompletePackage)
+    "ArrowUp" -> Ok(msg.UserSelectedPreviousAutocompletePackage)
     _ -> Error([])
   }
 }
@@ -168,16 +143,18 @@ fn autocomplete(model: Model) {
             True -> attribute.style([#("background", "red")])
             False -> attribute.none()
           }
-          let on_click =
-            event.on("click", fn(event) {
-              event.stop_propagation(event)
-              Ok(msg.UserSelectedAutocompletePackage(package))
-            })
+          let on_click = on_select_package(package)
           html.div([selected, on_click], [html.text(package)])
         }
       }
     }),
   ])
+}
+
+fn on_select_package(package: String) {
+  use event <- event.on("click")
+  event.stop_propagation(event)
+  Ok(msg.UserSelectedAutocompletePackage(package))
 }
 
 fn package_versions(model: Model) {
@@ -200,4 +177,14 @@ fn empty_autocomplete() {
     html.text("Autocomplete"),
     html.div([], [html.text("No packages found!")]),
   ])
+}
+
+fn snippet(snippet: option.Option(hexdocs.Highlight)) {
+  case snippet {
+    None -> element.none()
+    Some(t) -> {
+      let snippet = attribute.attribute("dangerous-unescaped-html", t.snippet)
+      html.div([snippet], [])
+    }
+  }
 }

@@ -1,28 +1,28 @@
 pub type Location
 
-@external(javascript, "./window.ffi.mjs", "hash")
+@external(javascript, "./location.ffi.mjs", "hash")
 pub fn hash(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "host")
+@external(javascript, "./location.ffi.mjs", "host")
 pub fn host(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "hostname")
+@external(javascript, "./location.ffi.mjs", "hostname")
 pub fn hostname(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "href")
+@external(javascript, "./location.ffi.mjs", "href")
 pub fn href(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "origin")
+@external(javascript, "./location.ffi.mjs", "origin")
 pub fn origin(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "pathname")
+@external(javascript, "./location.ffi.mjs", "pathname")
 pub fn pathname(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "port")
+@external(javascript, "./location.ffi.mjs", "port")
 pub fn port(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "protocol")
+@external(javascript, "./location.ffi.mjs", "protocol")
 pub fn protocol(location: Location) -> String
 
-@external(javascript, "./window.ffi.mjs", "search")
+@external(javascript, "./location.ffi.mjs", "search")
 pub fn search(location: Location) -> String

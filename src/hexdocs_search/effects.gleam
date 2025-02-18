@@ -22,12 +22,9 @@ pub fn package_versions(package: String) {
 
 pub fn subscribe_blurred_search() {
   use dispatch <- effect.from()
-  dispatch(
-    msg.DocumentRegisteredEventListener({
-      use <- document.add_listener()
-      dispatch(msg.UserBlurredSearch)
-    }),
-  )
+  document.add_listener(fn() { dispatch(msg.UserBlurredSearch) })
+  |> msg.DocumentRegisteredEventListener
+  |> dispatch
 }
 
 pub fn typesense_search(query: String, packages: List(String)) {

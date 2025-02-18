@@ -1,6 +1,6 @@
+import gleam/bool
 import gleam/dynamic/decode
 import gleam/fetch
-import gleam/function
 import gleam/http/request
 import gleam/http/response
 import gleam/int
@@ -12,7 +12,7 @@ import gleam/string
 import gleam/uri
 import hexdocs_search/endpoints
 import hexdocs_search/environment
-import hexdocs_search/error
+import hexdocs_search/loss
 
 pub type TypeSense {
   TypeSense(document: Document, highlight: Highlights)
@@ -65,30 +65,18 @@ pub fn packages() {
       let assert Ok(request) = request.from_uri(endpoint)
       fetch.send(request)
       |> promise.try_await(fetch.read_text_body)
-      |> promise.map(result.map_error(_, error.FetchError))
+      |> promise.map(result.map_error(_, loss.FetchError))
     }
   }
 }
 
 pub fn typesense_search(query: String, packages: List(String), page: Int) {
-  let query =
-    []
-    |> list.key_set("q", query)
-    |> list.key_set("query_by", "title,doc")
-    |> list.key_set("page", int.to_string(page))
-    |> case packages {
-      [] -> function.identity
-      packages -> {
-        let packages = "package: [" <> string.join(packages, with: ", ") <> "]"
-        list.key_set(_, "filter_by", packages)
-      }
-    }
-    |> uri.query_to_string
+  let query = new_search_query_params(query, packages, page)
   let endpoint = uri.Uri(..endpoints.search(), query: Some(query))
   let assert Ok(request) = request.from_uri(endpoint)
   fetch.send(request)
   |> promise.try_await(fetch.read_json_body)
-  |> promise.map(result.map_error(_, error.FetchError))
+  |> promise.map(result.map_error(_, loss.FetchError))
 }
 
 pub fn typesense_decoder() {
@@ -107,28 +95,39 @@ pub fn typesense_decoder() {
         |> decode.success
       })
       use highlight <- decode.field("highlight", {
-        use doc <- decode.optional_field("doc", None, {
-          use matched_tokens <- decode.field(
-            "matched_tokens",
-            decode.list(decode.string),
-          )
-          use snippet <- decode.field("snippet", decode.string)
-          Some(Highlight(matched_tokens:, snippet:))
-          |> decode.success
-        })
-        use title <- decode.optional_field("title", None, {
-          use matched_tokens <- decode.field(
-            "matched_tokens",
-            decode.list(decode.string),
-          )
-          use snippet <- decode.field("snippet", decode.string)
-          Some(Highlight(matched_tokens:, snippet:))
-          |> decode.success
-        })
+        let highlight = highlight_decoder() |> decode.map(Some)
+        use doc <- decode.optional_field("doc", None, highlight)
+        use title <- decode.optional_field("title", None, highlight)
         decode.success(Highlights(doc:, title:))
       })
       decode.success(TypeSense(document:, highlight:))
     })
   })
   decode.success(#(found, hits))
+}
+
+fn new_search_query_params(query: String, packages: List(String), page: Int) {
+  list.new()
+  |> list.key_set("q", query)
+  |> list.key_set("query_by", "title,doc")
+  |> list.key_set("page", int.to_string(page))
+  |> add_filter_by_packages_param(packages)
+  |> uri.query_to_string
+}
+
+fn add_filter_by_packages_param(
+  query: List(#(String, String)),
+  packages: List(String),
+) -> List(#(String, String)) {
+  use <- bool.guard(when: list.is_empty(packages), return: query)
+  let packages = "package: [" <> string.join(packages, with: ", ") <> "]"
+  list.key_set(query, "filter_by", packages)
+}
+
+fn highlight_decoder() {
+  let matched_tokens = decode.list(decode.string)
+  use matched_tokens <- decode.field("matched_tokens", matched_tokens)
+  use snippet <- decode.field("snippet", decode.string)
+  Highlight(matched_tokens:, snippet:)
+  |> decode.success
 }

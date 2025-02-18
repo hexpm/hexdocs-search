@@ -7,9 +7,9 @@ import gleam/string
 /// obtained through `all` for display purposes.
 pub opaque type Autocomplete {
   Autocomplete(
-    all_: List(String),
+    all: List(String),
     previous: List(String),
-    current_: Option(String),
+    current: Option(String),
     next: List(String),
   )
 }
@@ -17,31 +17,31 @@ pub opaque type Autocomplete {
 /// Initialise the current autocomplete, with no current selected element.
 pub fn init(packages: List(String), search: String) -> Autocomplete {
   let packages = keep_first_ten_packages(packages, search)
-  Autocomplete(all_: packages, previous: [], current_: None, next: packages)
+  Autocomplete(all: packages, previous: [], current: None, next: packages)
 }
 
 pub fn all(autocomplete: Autocomplete) -> List(String) {
-  autocomplete.all_
+  autocomplete.all
 }
 
 pub fn current(autocomplete: Autocomplete) -> Option(String) {
-  autocomplete.current_
+  autocomplete.current
 }
 
 pub fn selected(autocomplete: Autocomplete, element: String) -> Bool {
-  autocomplete.current_ == Some(element)
+  autocomplete.current == Some(element)
 }
 
 /// Select the next element. If there's no next element, nothing happens.
 pub fn next(autocomplete: Autocomplete) -> Autocomplete {
   case autocomplete {
     Autocomplete(next: [], ..) -> autocomplete
-    Autocomplete(next: [fst, ..next], current_: None, ..) ->
-      Autocomplete(..autocomplete, current_: Some(fst), next:)
-    Autocomplete(next: [fst, ..next], current_: Some(c), ..) -> {
+    Autocomplete(next: [fst, ..next], current: None, ..) ->
+      Autocomplete(..autocomplete, current: Some(fst), next:)
+    Autocomplete(next: [fst, ..next], current: Some(c), ..) -> {
       let previous = [c, ..autocomplete.previous]
-      let current_ = Some(fst)
-      Autocomplete(..autocomplete, previous:, current_:, next:)
+      let current = Some(fst)
+      Autocomplete(..autocomplete, previous:, current:, next:)
     }
   }
 }
@@ -51,12 +51,12 @@ pub fn next(autocomplete: Autocomplete) -> Autocomplete {
 /// happens.
 pub fn previous(autocomplete: Autocomplete) -> Autocomplete {
   case autocomplete {
-    Autocomplete(previous: [], current_: None, ..) -> autocomplete
-    Autocomplete(previous: [], current_: Some(c), next:, ..) ->
-      Autocomplete(..autocomplete, next: [c, ..next], current_: None)
-    Autocomplete(previous: [fst, ..previous], current_: Some(c), next:, ..) -> {
-      let current_ = Some(fst)
-      Autocomplete(..autocomplete, previous:, current_:, next: [c, ..next])
+    Autocomplete(previous: [], current: None, ..) -> autocomplete
+    Autocomplete(previous: [], current: Some(c), next:, ..) ->
+      Autocomplete(..autocomplete, next: [c, ..next], current: None)
+    Autocomplete(previous: [fst, ..previous], current: Some(c), next:, ..) -> {
+      let current = Some(fst)
+      Autocomplete(..autocomplete, previous:, current:, next: [c, ..next])
     }
     _ -> panic as "previous cannot be filled if current is None"
   }

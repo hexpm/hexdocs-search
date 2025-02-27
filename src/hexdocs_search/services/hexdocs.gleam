@@ -51,6 +51,12 @@ ssl_verify_fun
 parse_trans
 certifi
 mimerl
+lustre
+gleam_stdlib
+modem
+rsvp
+sketch
+amqp_client
 "
   })
   |> Ok

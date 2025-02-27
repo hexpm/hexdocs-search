@@ -17,6 +17,7 @@ import hexdocs_search/setup
 import hexdocs_search/view
 import lustre
 import lustre/effect
+import modem
 
 pub fn main() {
   let flags = Nil
@@ -44,6 +45,7 @@ fn update(model: Model, msg: Msg) {
       document_registered_event_listener(model, unsubscriber)
     msg.UserEditedSearchInput(search_input:) ->
       user_edited_search_input(model, search_input)
+    msg.UserClickedGoBack -> user_clicked_go_back(model)
     msg.UserSelectedNextAutocompletePackage ->
       user_selected_next_autocomplete_package(model)
     msg.UserSelectedPreviousAutocompletePackage ->
@@ -155,6 +157,10 @@ fn user_edited_packages_filter(model: Model, packages_filter_input) {
   model
   |> model.set_packages_filter_input(packages_filter_input)
   |> pair.new(effect.none())
+}
+
+fn user_clicked_go_back(model: Model) {
+  #(model, modem.back(1))
 }
 
 fn user_submitted_packages_filter(model: Model) {

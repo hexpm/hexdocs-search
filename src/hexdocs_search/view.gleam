@@ -16,27 +16,63 @@ import lustre/element/html
 import lustre/event
 
 pub fn view(model: Model) {
-  case model.route {
-    model.Home -> home(model)
-    model.Search -> search(model)
-    model.NotFound -> html.div([], [])
-  }
+  html.main([attribute.class("main")], [
+    case model.route {
+      model.Home -> home(model)
+      model.Search -> search(model)
+      model.NotFound -> html.div([], [])
+    },
+  ])
 }
 
 fn home(model: Model) {
-  html.div([], [
-    html.text("Hexdocs"),
-    html.form([event.on_submit(msg.UserSubmittedSearch)], [
-      html.input([
-        attribute.value(model.displayed),
-        event.on_input(msg.UserEditedSearch),
-        event.on("click", utils.stop_propagation),
-        event.on_focus(msg.UserFocusedSearch),
-        event.on("keydown", on_arrow_up_down),
+  let go_back = event.on_click(msg.UserClickedGoBack)
+  html.div([attribute.class("home")], [
+    html.button([attribute.class("go-back"), go_back], [
+      html.text("Go back to Hex"),
+    ]),
+    html.div([attribute.class("title")], [
+      html.span([attribute.class("bold")], [html.text("hex")]),
+      html.text("docs"),
+    ]),
+    html.form(
+      [attribute.class("search-form"), event.on_submit(msg.UserSubmittedSearch)],
+      [
+        html.input([
+          attribute.class("search-input"),
+          attribute.value(model.displayed),
+          attribute.placeholder("Search for packages..."),
+          event.on_input(msg.UserEditedSearch),
+          event.on("click", utils.stop_propagation),
+          event.on_focus(msg.UserFocusedSearch),
+          event.on("keydown", on_arrow_up_down),
+        ]),
+        html.button([attribute.class("search-submit")], [
+          html.text("Search Packages"),
+        ]),
+        autocomplete(model),
+        package_versions(model),
+      ],
+    ),
+    html.div([attribute.class("descriptions-text")], [
+      html.div([attribute.class("descriptions-title")], [
+        html.text("To search specific packages"),
+      ]),
+      html.div([], [
+        html.text("Type '#' to scope your search to one or more packages."),
+        html.br([]),
+        html.text("Use '#<package:version>' to pick a specific version."),
       ]),
     ]),
-    autocomplete(model),
-    package_versions(model),
+    html.div([attribute.class("descriptions-text")], [
+      html.div([attribute.class("descriptions-title")], [
+        html.text("To access a package documentation"),
+      ]),
+      html.div([], [
+        html.text("Visit hexdocs.pm/<package> or "),
+        html.text("hexdocs.pm/<package>/<version>"),
+      ]),
+    ]),
   ])
 }
 

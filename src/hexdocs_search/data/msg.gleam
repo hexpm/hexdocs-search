@@ -15,6 +15,7 @@ pub type Msg {
   UserEditedSearch(search: String)
   UserEditedSearchInput(search_input: String)
   UserFocusedSearch
+  UserClickedGoBack
   UserSelectedPreviousAutocompletePackage
   UserSelectedAutocompletePackage(package: String)
   UserSelectedNextAutocompletePackage

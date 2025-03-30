@@ -1,6 +1,6 @@
+import browser/window
+import browser/window/location
 import gleam/result
-import window
-import window/location
 
 pub type Environment {
   Development
@@ -16,7 +16,7 @@ pub fn read() {
   let location = window.location()
   let hostname = result.map(location, location.hostname)
   case hostname {
-    Ok("localhost") -> Development
+    Ok("localhost") | Ok("127.0.0.1") -> Development
     Ok("staging" <> _) -> Staging
     _ -> Production
   }

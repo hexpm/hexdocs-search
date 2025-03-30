@@ -3,3 +3,4 @@
 /build
 erl_crash.dump
 priv/static/hexdocs_search.mjs
+priv/static/hexdocs_search.css

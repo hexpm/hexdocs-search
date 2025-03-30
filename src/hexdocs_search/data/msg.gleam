@@ -1,26 +1,31 @@
 import gleam/dynamic/decode
+import gleam/hexpm
 import gleam/http/response
 import gleam/uri
 import hexdocs_search/loss.{type Loss}
-import hexdocs_search/services/hex
 
 pub type Msg {
-  ApiReturnedPackageVersions(Loss(response.Response(hex.Package)))
+  ApiReturnedPackageVersions(Loss(response.Response(hexpm.Package)))
   ApiReturnedPackages(Loss(response.Response(String)))
   ApiReturnedTypesenseSearch(Loss(response.Response(decode.Dynamic)))
+
   DocumentChangedLocation(location: uri.Uri)
   DocumentRegisteredEventListener(unsubscriber: fn() -> Nil)
-  UserBlurredSearch
-  UserEditedPackagesFilter(packages_filter_input: String)
-  UserEditedSearch(search: String)
-  UserEditedSearchInput(search_input: String)
-  UserFocusedSearch
+
+  UserToggledDarkMode
   UserClickedGoBack
-  UserSelectedPreviousAutocompletePackage
-  UserSelectedAutocompletePackage(package: String)
+
+  UserFocusedSearch
+  UserBlurredSearch
+  UserEditedSearch(search: String)
+  UserClickedAutocompletePackage(package: String)
   UserSelectedNextAutocompletePackage
-  UserSubmittedPackagesFilter
+  UserSelectedPreviousAutocompletePackage
   UserSubmittedSearch
+
+  UserEditedPackagesFilter(packages_filter_input: String)
+  UserSubmittedPackagesFilter
+  UserEditedSearchInput(search_input: String)
   UserSubmittedSearchInput
   UserSuppressedPackagesFilter(filter: String)
 }

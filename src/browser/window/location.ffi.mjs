@@ -1,4 +1,4 @@
-import * as gleam from "../gleam.mjs"
+import * as gleam from "../../gleam.mjs"
 
 export function location() {
   if (typeof window === "undefined") return new gleam.Error()

@@ -1,16 +1,41 @@
 <!doctype html>
 <html lang="en">
-  <link>
+  <head>
+    <!-- Meta information, for display. -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>🚧 hexdocs_search</title>
+    <!-- Display information of search engines. -->
+    <title>Hexdocs</title>
 
-    <!-- Uncomment this if you add the TailwindCSS integration -->
-    <!-- <link rel="stylesheet" href="/priv/static/hexdocs_search.css"> -->
-    <link href="/priv/static/styles.css" rel="stylesheet">
+    <!-- Favicons files. -->
+    <link rel="icon" type="image/png" href="/priv/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/priv/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/priv/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/priv/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/priv/favicon/site.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="Hexdocs" />
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
+
+    <!-- CSS files. -->
+    <link rel="stylesheet" href="/priv/static/styles.css" />
+    <link rel="stylesheet" href="/priv/static/hexdocs_search.css" />
+
+    <!-- Custom style. -->
+    <style>
+      .search-input:focus {
+        border-radius: 0.5rem;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        border-color: transparent;
+      }
+    </style>
+
+    <!-- JavaScript files. -->
     <script type="module" src="/priv/static/hexdocs_search.mjs"></script>
-  </head>
   </head>
 
   <body>

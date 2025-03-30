@@ -1,4 +1,4 @@
-import document
+import browser/document
 import gleam/function
 import gleam/javascript/promise
 import hexdocs_search/data/msg

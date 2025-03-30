@@ -1,4 +1,6 @@
 import gleam/dynamic/decode
+import gleam/function
+import gleam/hexpm
 import gleam/http/response.{type Response}
 import gleam/list
 import gleam/option.{Some}
@@ -11,7 +13,6 @@ import hexdocs_search/data/model.{type Model, Model}
 import hexdocs_search/data/msg.{type Msg}
 import hexdocs_search/effects
 import hexdocs_search/loss.{type Loss}
-import hexdocs_search/services/hex
 import hexdocs_search/services/hexdocs
 import hexdocs_search/setup
 import hexdocs_search/view
@@ -27,33 +28,39 @@ pub fn main() {
 }
 
 fn update(model: Model, msg: Msg) {
-  case msg {
-    msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
-    msg.UserSubmittedSearchInput -> user_submitted_search_input(model)
-    msg.UserBlurredSearch -> model.blur_search(model)
-    msg.UserEditedSearch(search:) -> user_edited_search(model, search)
-    msg.UserFocusedSearch -> user_focused_search(model)
-    msg.UserSubmittedPackagesFilter -> user_submitted_packages_filter(model)
-    msg.UserSubmittedSearch -> user_submitted_search(model)
+  case msg |> echo {
     msg.ApiReturnedPackageVersions(response) ->
       api_returned_package_versions(model, response)
+    msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
     msg.ApiReturnedTypesenseSearch(response) ->
       api_returned_typesense_search(model, response)
+
     msg.DocumentChangedLocation(location:) ->
       document_changed_location(model, location)
     msg.DocumentRegisteredEventListener(unsubscriber:) ->
       document_registered_event_listener(model, unsubscriber)
-    msg.UserEditedSearchInput(search_input:) ->
-      user_edited_search_input(model, search_input)
+
+    msg.UserToggledDarkMode -> #(model, effect.none())
     msg.UserClickedGoBack -> user_clicked_go_back(model)
+
+    msg.UserFocusedSearch -> user_focused_search(model)
+    msg.UserBlurredSearch -> model.blur_search(model)
+
+    msg.UserEditedPackagesFilter(packages_filter_input:) ->
+      user_edited_packages_filter(model, packages_filter_input)
+    msg.UserEditedSearch(search:) -> user_edited_search(model, search)
+    msg.UserClickedAutocompletePackage(package:) ->
+      user_clicked_autocomplete_package(model, package)
     msg.UserSelectedNextAutocompletePackage ->
       user_selected_next_autocomplete_package(model)
     msg.UserSelectedPreviousAutocompletePackage ->
       user_selected_previous_autocomplete_package(model)
-    msg.UserSelectedAutocompletePackage(package:) ->
-      user_selected_autocomplete_package(model, package)
-    msg.UserEditedPackagesFilter(packages_filter_input:) ->
-      user_edited_packages_filter(model, packages_filter_input)
+    msg.UserSubmittedSearch -> user_submitted_search(model)
+
+    msg.UserEditedSearchInput(search_input:) ->
+      user_edited_search_input(model, search_input)
+    msg.UserSubmittedPackagesFilter -> user_submitted_packages_filter(model)
+    msg.UserSubmittedSearchInput -> user_submitted_search_input(model)
     msg.UserSuppressedPackagesFilter(filter:) ->
       user_suppressed_packages_filter(model, filter)
   }
@@ -61,7 +68,7 @@ fn update(model: Model, msg: Msg) {
 
 fn api_returned_package_versions(
   model: Model,
-  response: Loss(Response(hex.Package)),
+  response: Loss(Response(hexpm.Package)),
 ) {
   case response {
     Ok(response.Response(status: 200, body:, ..)) ->
@@ -144,7 +151,7 @@ fn user_selected_previous_autocomplete_package(model: Model) {
   |> pair.new(effect.none())
 }
 
-fn user_selected_autocomplete_package(model: Model, package: String) {
+fn user_clicked_autocomplete_package(model: Model, package: String) {
   model
   |> model.select_package(package)
   |> model.blur_search

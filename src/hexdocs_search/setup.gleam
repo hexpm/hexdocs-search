@@ -1,4 +1,3 @@
-import gleam/pair
 import hexdocs_search/data/model
 import hexdocs_search/data/msg
 import hexdocs_search/effects
@@ -9,7 +8,7 @@ pub fn init(_) {
   let modem = modem.init(msg.DocumentChangedLocation)
   let packages = effects.packages()
   let assert Ok(initial_uri) = modem.initial_uri()
-  model.new()
-  |> model.update_route(initial_uri)
-  |> pair.new(effect.batch([packages, modem]))
+  let model = model.new()
+  let #(model, route) = model.update_route(model, initial_uri)
+  #(model, effect.batch([packages, modem, route]))
 }

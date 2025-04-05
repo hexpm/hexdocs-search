@@ -76,7 +76,11 @@ pub fn packages() {
   }
 }
 
-pub fn typesense_search(query: String, packages: List(String), page: Int) {
+pub fn typesense_search(
+  query: String,
+  packages: List(#(String, Option(String))),
+  page: Int,
+) {
   let query = new_search_query_params(query, packages, page)
   let endpoint = uri.Uri(..endpoints.search(), query: Some(query))
   let assert Ok(request) = request.from_uri(endpoint)
@@ -112,7 +116,11 @@ pub fn typesense_decoder() {
   decode.success(#(found, hits))
 }
 
-fn new_search_query_params(query: String, packages: List(String), page: Int) {
+fn new_search_query_params(
+  query: String,
+  packages: List(#(String, Option(String))),
+  page: Int,
+) {
   list.new()
   |> list.key_set("q", query)
   |> list.key_set("query_by", "title,doc")
@@ -123,9 +131,16 @@ fn new_search_query_params(query: String, packages: List(String), page: Int) {
 
 fn add_filter_by_packages_param(
   query: List(#(String, String)),
-  packages: List(String),
+  packages: List(#(String, Option(String))),
 ) -> List(#(String, String)) {
   use <- bool.guard(when: list.is_empty(packages), return: query)
+  let packages = {
+    use p <- list.map(packages)
+    case p.1 {
+      None -> p.0
+      Some(version) -> p.0 <> "@" <> version
+    }
+  }
   let packages = "package: [" <> string.join(packages, with: ", ") <> "]"
   list.key_set(query, "filter_by", packages)
 }

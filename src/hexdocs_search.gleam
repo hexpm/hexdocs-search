@@ -2,7 +2,6 @@ import gleam/dict
 import gleam/dynamic/decode
 import gleam/hexpm
 import gleam/http/response.{type Response}
-import gleam/list
 import gleam/option.{Some}
 import gleam/pair
 import gleam/result
@@ -10,6 +9,7 @@ import gleam/string
 import grille_pain
 import grille_pain/lustre/toast
 import hexdocs_search/data/model.{type Model, Model}
+import hexdocs_search/data/model/route
 import hexdocs_search/data/msg.{type Msg}
 import hexdocs_search/effects
 import hexdocs_search/loss.{type Loss}
@@ -28,7 +28,7 @@ pub fn main() {
 }
 
 fn update(model: Model, msg: Msg) {
-  case msg |> echo {
+  case msg {
     msg.ApiReturnedPackageVersions(package, response) ->
       api_returned_package_versions(model, package, response)
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
@@ -36,7 +36,7 @@ fn update(model: Model, msg: Msg) {
       api_returned_typesense_search(model, response)
 
     msg.DocumentChangedLocation(location:) ->
-      document_changed_location(model, location)
+      model.update_route(model, location)
     msg.DocumentRegisteredEventListener(unsubscriber:) ->
       document_registered_event_listener(model, unsubscriber)
 
@@ -60,7 +60,7 @@ fn update(model: Model, msg: Msg) {
     msg.UserEditedSearchInput(search_input:) ->
       user_edited_search_input(model, search_input)
     msg.UserSubmittedPackagesFilter -> user_submitted_packages_filter(model)
-    msg.UserSubmittedSearchInput -> user_submitted_search_input(model)
+    msg.UserSubmittedSearchInput -> user_submitted_search(model)
     msg.UserSuppressedPackagesFilter(filter:) ->
       user_suppressed_packages_filter(model, filter)
   }
@@ -107,12 +107,6 @@ fn api_returned_typesense_search(
   |> result.unwrap(#(model, effect.none()))
 }
 
-fn document_changed_location(model: Model, location) {
-  model
-  |> model.update_route(location)
-  |> pair.new(effect.none())
-}
-
 fn document_registered_event_listener(model: Model, unsubscriber: fn() -> Nil) {
   let dom_click_unsubscriber = Some(unsubscriber)
   Model(..model, dom_click_unsubscriber:)
@@ -124,10 +118,14 @@ fn user_edited_search_input(model: Model, search_input: String) {
   |> pair.new(effect.none())
 }
 
-fn user_submitted_search_input(model: Model) {
-  model.search_input
-  |> effects.typesense_search(model.packages_filter)
-  |> pair.new(model, _)
+fn user_submitted_search(model: Model) {
+  let model = model.compute_typesense_input(model)
+  #(model, {
+    route.push(route.Search(
+      q: model.search_input,
+      packages: model.packages_filter,
+    ))
+  })
 }
 
 fn user_focused_search(model: Model) {
@@ -159,7 +157,7 @@ fn user_clicked_autocomplete_package(model: Model, package: String) {
 
 fn user_edited_packages_filter(model: Model, packages_filter_input) {
   model
-  |> model.set_packages_filter_input(packages_filter_input)
+  // |> model.set_packages_filter_input(packages_filter_input)
   |> pair.new(effect.none())
 }
 
@@ -168,25 +166,21 @@ fn user_clicked_go_back(model: Model) {
 }
 
 fn user_submitted_packages_filter(model: Model) {
-  model.packages_filter
-  |> list.reverse
-  |> list.prepend(model.packages_filter_input)
-  |> list.reverse
-  |> list.unique
-  |> model.set_packages_filter(model, _)
-  |> model.set_packages_filter_input("")
-  |> pair.new(effect.none())
-}
-
-fn user_submitted_search(model: Model) {
-  let #(model, effects) = model.blur_search(model)
-  let package = model.displayed
-  #(model, effect.batch([effects.package_versions(package), effects]))
+  #(model, effect.none())
+  // model.packages_filter
+  // |> list.reverse
+  // |> list.prepend(model.packages_filter_input)
+  // |> list.reverse
+  // |> list.unique
+  // |> model.set_packages_filter(model, _)
+  // |> model.set_packages_filter_input("")
+  // |> pair.new(effect.none())
 }
 
 fn user_suppressed_packages_filter(model: Model, filter: String) {
-  model.packages_filter
-  |> list.filter(fn(f) { f != filter })
-  |> model.set_packages_filter(model, _)
-  |> pair.new(effect.none())
+  #(model, effect.none())
+  // model.packages_filter
+  // |> list.filter(fn(f) { f != filter })
+  // |> model.set_packages_filter(model, _)
+  // |> pair.new(effect.none())
 }

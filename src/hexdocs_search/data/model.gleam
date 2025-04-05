@@ -8,6 +8,8 @@ import gleam/result
 import gleam/string
 import gleam/uri
 import hexdocs_search/data/model/autocomplete.{type Autocomplete}
+import hexdocs_search/data/model/route.{type Route}
+import hexdocs_search/data/model/version
 import hexdocs_search/effects
 import hexdocs_search/services/hexdocs
 import lustre/effect
@@ -24,15 +26,9 @@ pub type Model {
     dom_click_unsubscriber: Option(fn() -> Nil),
     search_result: Option(#(Int, List(hexdocs.TypeSense))),
     route: Route,
-    packages_filter: List(String),
+    packages_filter: List(#(String, Option(String))),
     packages_filter_input: String,
   )
-}
-
-pub type Route {
-  Home
-  Search
-  NotFound
 }
 
 pub fn new() -> Model {
@@ -46,7 +42,7 @@ pub fn new() -> Model {
     package_versions: dict.new(),
     dom_click_unsubscriber: None,
     search_result: None,
-    route: Home,
+    route: route.Home,
     packages_filter: [],
     packages_filter_input: "",
   )
@@ -54,10 +50,6 @@ pub fn new() -> Model {
 
 pub fn add_packages(model: Model, packages: List(String)) {
   Model(..model, packages:)
-}
-
-pub fn set_packages_filter(model: Model, packages_filter: List(String)) {
-  Model(..model, packages_filter:)
 }
 
 pub fn update_search(model: Model, search: String) {
@@ -72,6 +64,18 @@ pub fn focus_search(model: Model) {
   |> autocomplete_versions
 }
 
+pub fn update_route(model: Model, route: uri.Uri) {
+  let route = route.from_uri(route)
+  let model = Model(..model, route:)
+  case route {
+    route.Home | route.NotFound -> #(model, effect.none())
+    route.Search(q:, packages:) -> {
+      Model(..model, search_input: q, packages_filter: packages)
+      |> pair.new(effects.typesense_search(q, packages))
+    }
+  }
+}
+
 pub fn select_autocomplete_option(model: Model, package: String) {
   case model.autocomplete {
     None -> model
@@ -83,8 +87,14 @@ pub fn select_autocomplete_option(model: Model, package: String) {
   }
 }
 
-pub fn set_packages_filter_input(model: Model, packages_filter_input: String) {
-  Model(..model, packages_filter_input:)
+pub fn compute_typesense_input(model: Model) -> Model {
+  let segments = string.split(model.displayed, on: " ")
+  let packages_filter = list.filter_map(segments, version.match_package)
+  Model(..model, packages_filter:, search_input: {
+    segments
+    |> list.filter(fn(s) { version.match_package(s) |> result.is_error })
+    |> string.join(with: " ")
+  })
 }
 
 pub fn set_search_results(
@@ -93,16 +103,6 @@ pub fn set_search_results(
 ) -> Model {
   let search_result = Some(search_result)
   Model(..model, search_result:)
-}
-
-pub fn update_route(model: Model, location: uri.Uri) {
-  Model(..model, route: {
-    case uri.path_segments(location.path) {
-      [] -> Home
-      ["search"] -> Search
-      _ -> NotFound
-    }
-  })
 }
 
 pub fn blur_search(model: Model) {

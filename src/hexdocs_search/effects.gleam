@@ -1,6 +1,7 @@
 import browser/document
 import gleam/function
 import gleam/javascript/promise
+import gleam/option.{type Option}
 import hexdocs_search/data/msg
 import hexdocs_search/services/hex
 import hexdocs_search/services/hexdocs
@@ -27,7 +28,10 @@ pub fn subscribe_blurred_search() {
   |> dispatch
 }
 
-pub fn typesense_search(query: String, packages: List(String)) {
+pub fn typesense_search(
+  query: String,
+  packages: List(#(String, Option(String))),
+) {
   use dispatch <- effect.from()
   use _ <- function.tap(Nil)
   use response <- promise.map(hexdocs.typesense_search(query, packages, 1))

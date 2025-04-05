@@ -1,4 +1,5 @@
 import gleam/bool
+import gleam/dict.{type Dict}
 import gleam/hexpm
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -7,6 +8,7 @@ import gleam/result
 import gleam/string
 import gleam/uri
 import hexdocs_search/data/model/autocomplete.{type Autocomplete}
+import hexdocs_search/effects
 import hexdocs_search/services/hexdocs
 import lustre/effect
 
@@ -18,7 +20,7 @@ pub type Model {
     displayed: String,
     search_focused: Bool,
     autocomplete: Option(Autocomplete),
-    package_versions: Option(hexpm.Package),
+    package_versions: Dict(String, hexpm.Package),
     dom_click_unsubscriber: Option(fn() -> Nil),
     search_result: Option(#(Int, List(hexdocs.TypeSense))),
     route: Route,
@@ -41,7 +43,7 @@ pub fn new() -> Model {
     displayed: "",
     search_focused: False,
     autocomplete: None,
-    package_versions: None,
+    package_versions: dict.new(),
     dom_click_unsubscriber: None,
     search_result: None,
     route: Home,
@@ -61,16 +63,24 @@ pub fn set_packages_filter(model: Model, packages_filter: List(String)) {
 pub fn update_search(model: Model, search: String) {
   Model(..model, search:, displayed: search)
   |> autocomplete_packages
+  |> autocomplete_versions
 }
 
 pub fn focus_search(model: Model) {
   Model(..model, search_focused: True)
   |> autocomplete_packages
+  |> autocomplete_versions
 }
 
-pub fn select_package(model: Model, package: String) {
-  let content = replace_last_word(model.displayed, package)
-  Model(..model, search: content, displayed: content, autocomplete: None)
+pub fn select_autocomplete_option(model: Model, package: String) {
+  case model.autocomplete {
+    None -> model
+    Some(autocomplete) -> {
+      let type_ = autocomplete.type_(autocomplete)
+      let displayed = replace_last_word(model.displayed, package, type_)
+      Model(..model, search: displayed, displayed:, autocomplete: None)
+    }
+  }
 }
 
 pub fn set_packages_filter_input(model: Model, packages_filter_input: String) {
@@ -112,45 +122,101 @@ pub fn blur_search(model: Model) {
 }
 
 pub fn autocomplete_packages(model: Model) {
-  case should_trigger_autocomplete(model.search) |> echo {
+  case should_trigger_autocomplete_packages(model.search) {
     Error(_) -> Model(..model, autocomplete: None)
     Ok(search) -> {
-      let autocomplete = autocomplete.init(model.packages, search)
+      let type_ = autocomplete.Package
+      let autocomplete = autocomplete.init(type_, model.packages, search)
       Model(..model, autocomplete: Some(autocomplete))
     }
   }
 }
 
+pub fn autocomplete_versions(model: Model) {
+  case should_trigger_autocomplete_versions(model.search) {
+    Error(_) -> #(model, effect.none())
+    Ok(#(package, version)) -> {
+      case dict.get(model.package_versions, package) {
+        Error(_) -> #(model, effects.package_versions(package))
+        Ok(package) -> {
+          let versions = list.map(package.releases, fn(r) { r.version })
+          let type_ = autocomplete.Version
+          let autocomplete = autocomplete.init(type_, versions, version)
+          let model = Model(..model, autocomplete: Some(autocomplete))
+          #(model, effect.none())
+        }
+      }
+    }
+  }
+}
+
 pub fn select_next_package(model: Model) -> Model {
-  let autocomplete = option.map(model.autocomplete, autocomplete.next)
-  Model(..model, autocomplete:)
-  |> update_displayed
+  map_autocomplete(model, autocomplete.next)
 }
 
 pub fn select_previous_package(model: Model) -> Model {
-  let autocomplete = option.map(model.autocomplete, autocomplete.previous)
-  Model(..model, autocomplete:)
-  |> update_displayed
+  map_autocomplete(model, autocomplete.previous)
+}
+
+fn map_autocomplete(model: Model, mapper: fn(Autocomplete) -> Autocomplete) {
+  case model.autocomplete {
+    None -> model
+    Some(autocomplete) -> {
+      let autocomplete = mapper(autocomplete)
+      let model = Model(..model, autocomplete: Some(autocomplete))
+      update_displayed(model)
+    }
+  }
 }
 
 fn update_displayed(model: Model) {
-  model.autocomplete
-  |> option.then(autocomplete.current)
-  |> option.map(replace_last_word(model.displayed, _))
-  |> option.map(fn(displayed) { Model(..model, displayed:) })
-  |> option.unwrap(Model(..model, displayed: model.search))
+  case model.autocomplete {
+    None -> Model(..model, displayed: model.search)
+    Some(autocomplete) -> {
+      case autocomplete.current(autocomplete) {
+        None -> Model(..model, displayed: model.search)
+        Some(current) -> {
+          let type_ = autocomplete.type_(autocomplete)
+          let displayed = replace_last_word(model.displayed, current, type_)
+          Model(..model, displayed:)
+        }
+      }
+    }
+  }
 }
 
-fn replace_last_word(content, word) {
-  let parts = string.split(content, on: " ")
-  let length = list.length(parts)
-  parts
-  |> list.take(length - 1)
-  |> list.append(["#" <> word])
-  |> string.join(with: " ")
+fn replace_last_word(content: String, word: String, type_: autocomplete.Type) {
+  case type_ {
+    autocomplete.Package -> {
+      let parts = string.split(content, on: " ")
+      let length = list.length(parts)
+      parts
+      |> list.take(length - 1)
+      |> list.append(["#" <> word])
+      |> string.join(with: " ")
+    }
+    autocomplete.Version -> {
+      let parts = string.split(content, on: " ")
+      let length = list.length(parts)
+      let start = list.take(parts, length - 1)
+      case list.last(parts) {
+        Error(_) -> string.join(parts, with: " ")
+        Ok(last_word) -> {
+          let segments = string.split(last_word, on: ":")
+          let length = list.length(segments)
+          list.take(segments, length - 1)
+          |> list.append([word])
+          |> string.join(with: ":")
+          |> list.wrap
+          |> list.append(start, _)
+          |> string.join(with: " ")
+        }
+      }
+    }
+  }
 }
 
-fn should_trigger_autocomplete(search: String) {
+fn should_trigger_autocomplete_packages(search: String) {
   let no_search = string.is_empty(search) || string.ends_with(search, " ")
   use <- bool.guard(when: no_search, return: Error(Nil))
   search
@@ -161,6 +227,26 @@ fn should_trigger_autocomplete(search: String) {
     case string.starts_with(search, "#") {
       True -> Ok(string.slice(from: search, at_index: 1, length:))
       False -> Error(Nil)
+    }
+  })
+}
+
+fn should_trigger_autocomplete_versions(search: String) {
+  let no_search = string.is_empty(search) || string.ends_with(search, " ")
+  use <- bool.guard(when: no_search, return: Error(Nil))
+  search
+  |> string.split(on: " ")
+  |> list.last
+  |> result.then(fn(search) {
+    let length = string.length(search)
+    case string.starts_with(search, "#") {
+      False -> Error(Nil)
+      True ->
+        case string.split(search, on: ":") {
+          [word, version] ->
+            Ok(#(string.slice(from: word, at_index: 1, length:), version))
+          _ -> Error(Nil)
+        }
     }
   })
 }

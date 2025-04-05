@@ -1,13 +1,12 @@
 import gleam/bool
 import gleam/dynamic/decode
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
 import hexdocs_search/data/model.{type Model}
 import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/msg
-import hexdocs_search/services/hexdocs
 import hexdocs_search/utils
 import hexdocs_search/view/home/footer
 import lustre/attribute.{class, id}
@@ -16,7 +15,7 @@ import lustre/element/html
 import lustre/event
 
 pub fn home(model: Model) {
-  let go_back = event.on_click(msg.UserClickedGoBack)
+  // let go_back = event.on_click(msg.UserClickedGoBack)
   let toggle_mode = event.on_click(msg.UserToggledDarkMode)
   html.div(
     [
@@ -203,24 +202,27 @@ pub fn home(model: Model) {
         ]),
       ]),
       footer.footer(),
-      package_versions(model),
     ],
   )
 }
 
 fn on_arrow_up_down(event: decode.Dynamic) {
-  let key_decoder = decode.at(["key"], decode.string)
-  let key = decode.run(event, key_decoder) |> result.replace_error([])
-  use key <- result.try(key)
-  case list.contains(["ArrowDown", "ArrowUp"], key) {
-    True -> event.prevent_default(event)
-    False -> Nil
-  }
+  use key <- result.try(prevent_arrow_event(event))
   case key {
     "ArrowDown" -> Ok(msg.UserSelectedNextAutocompletePackage)
     "ArrowUp" -> Ok(msg.UserSelectedPreviousAutocompletePackage)
     _ -> Error([])
   }
+}
+
+fn prevent_arrow_event(event: decode.Dynamic) {
+  let key_decoder = decode.at(["key"], decode.string)
+  let key = decode.run(event, key_decoder) |> result.replace_error([])
+  use key <- result.try(key)
+  let is_arrow = list.contains(["ArrowDown", "ArrowUp"], key)
+  use <- bool.guard(when: !is_arrow, return: Error([]))
+  event.prevent_default(event)
+  Ok(key)
 }
 
 fn autocomplete(model: Model) {
@@ -272,20 +274,4 @@ fn on_select_package(package: String) {
   use event <- event.on("click")
   event.stop_propagation(event)
   Ok(msg.UserClickedAutocompletePackage(package))
-}
-
-fn package_versions(model: Model) {
-  case model.package_versions {
-    None -> element.none()
-    Some(package) -> {
-      html.div([], [
-        html.text("Package versions"),
-        html.div([], {
-          let versions = list.map(package.releases, fn(r) { r.version })
-          use version <- list.map(versions)
-          html.div([], [html.text(version)])
-        }),
-      ])
-    }
-  }
 }

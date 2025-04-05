@@ -1,5 +1,5 @@
+import gleam/dict
 import gleam/dynamic/decode
-import gleam/function
 import gleam/hexpm
 import gleam/http/response.{type Response}
 import gleam/list
@@ -29,8 +29,8 @@ pub fn main() {
 
 fn update(model: Model, msg: Msg) {
   case msg |> echo {
-    msg.ApiReturnedPackageVersions(response) ->
-      api_returned_package_versions(model, response)
+    msg.ApiReturnedPackageVersions(package, response) ->
+      api_returned_package_versions(model, package, response)
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
     msg.ApiReturnedTypesenseSearch(response) ->
       api_returned_typesense_search(model, response)
@@ -46,9 +46,7 @@ fn update(model: Model, msg: Msg) {
     msg.UserFocusedSearch -> user_focused_search(model)
     msg.UserBlurredSearch -> model.blur_search(model)
 
-    msg.UserEditedPackagesFilter(packages_filter_input:) ->
-      user_edited_packages_filter(model, packages_filter_input)
-    msg.UserEditedSearch(search:) -> user_edited_search(model, search)
+    msg.UserEditedSearch(search:) -> model.update_search(model, search)
     msg.UserClickedAutocompletePackage(package:) ->
       user_clicked_autocomplete_package(model, package)
     msg.UserSelectedNextAutocompletePackage ->
@@ -57,6 +55,8 @@ fn update(model: Model, msg: Msg) {
       user_selected_previous_autocomplete_package(model)
     msg.UserSubmittedSearch -> user_submitted_search(model)
 
+    msg.UserEditedPackagesFilter(packages_filter_input:) ->
+      user_edited_packages_filter(model, packages_filter_input)
     msg.UserEditedSearchInput(search_input:) ->
       user_edited_search_input(model, search_input)
     msg.UserSubmittedPackagesFilter -> user_submitted_packages_filter(model)
@@ -68,12 +68,15 @@ fn update(model: Model, msg: Msg) {
 
 fn api_returned_package_versions(
   model: Model,
+  package: String,
   response: Loss(Response(hexpm.Package)),
-) {
+) -> #(Model, effect.Effect(Msg)) {
   case response {
-    Ok(response.Response(status: 200, body:, ..)) ->
-      Model(..model, package_versions: Some(body))
-      |> pair.new(effect.none())
+    Ok(response.Response(status: 200, body:, ..)) -> {
+      let package_versions = dict.insert(model.package_versions, package, body)
+      let model = Model(..model, package_versions:)
+      model.focus_search(model)
+    }
     _ -> #(model, toast.error("Server error. Retry later."))
   }
 }
@@ -127,16 +130,10 @@ fn user_submitted_search_input(model: Model) {
   |> pair.new(model, _)
 }
 
-fn user_edited_search(model: Model, search: String) {
-  model
-  |> model.update_search(search)
-  |> pair.new(effect.none())
-}
-
 fn user_focused_search(model: Model) {
-  model
-  |> model.focus_search
-  |> pair.new(effects.subscribe_blurred_search())
+  let #(model, effect) = model.focus_search(model)
+  let effects = effect.batch([effect, effects.subscribe_blurred_search()])
+  #(model, effects)
 }
 
 fn user_selected_next_autocomplete_package(model: Model) {
@@ -153,7 +150,7 @@ fn user_selected_previous_autocomplete_package(model: Model) {
 
 fn user_clicked_autocomplete_package(model: Model, package: String) {
   model
-  |> model.select_package(package)
+  |> model.select_autocomplete_option(package)
   |> model.blur_search
   |> pair.map_second(fn(effects) {
     effect.batch([effects.package_versions(package), effects])

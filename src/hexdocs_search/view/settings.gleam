@@ -2,7 +2,7 @@ import lustre/attribute.{attribute}
 import lustre/element
 import lustre/element/html
 
-pub fn settings(model) {
+pub fn settings(_model) {
   element.fragment([
     html.div(
       [

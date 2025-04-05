@@ -5,7 +5,10 @@ import gleam/uri
 import hexdocs_search/loss.{type Loss}
 
 pub type Msg {
-  ApiReturnedPackageVersions(Loss(response.Response(hexpm.Package)))
+  ApiReturnedPackageVersions(
+    package: String,
+    response: Loss(response.Response(hexpm.Package)),
+  )
   ApiReturnedPackages(Loss(response.Response(String)))
   ApiReturnedTypesenseSearch(Loss(response.Response(decode.Dynamic)))
 

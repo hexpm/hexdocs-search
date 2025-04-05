@@ -17,7 +17,7 @@ pub fn package_versions(package: String) {
   use dispatch <- effect.from()
   use _ <- function.tap(Nil)
   use response <- promise.map(hex.package_versions(package))
-  dispatch(msg.ApiReturnedPackageVersions(response))
+  dispatch(msg.ApiReturnedPackageVersions(package:, response:))
 }
 
 pub fn subscribe_blurred_search() {

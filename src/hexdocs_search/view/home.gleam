@@ -240,7 +240,7 @@ fn autocomplete(model: Model) {
     [
       case model.autocomplete {
         None -> element.none()
-        Some(autocomplete) -> {
+        Some(#(_type_, autocomplete)) -> {
           let items = autocomplete.all(autocomplete)
           let is_empty = list.is_empty(items)
           use <- bool.lazy_guard(when: is_empty, return: empty_autocomplete)

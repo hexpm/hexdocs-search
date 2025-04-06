@@ -21,14 +21,21 @@ pub type Model {
     search_input: String,
     displayed: String,
     search_focused: Bool,
-    autocomplete: Option(Autocomplete),
+    autocomplete: Option(#(Type, Autocomplete)),
     package_versions: Dict(String, hexpm.Package),
     dom_click_unsubscriber: Option(fn() -> Nil),
     search_result: Option(#(Int, List(hexdocs.TypeSense))),
     route: Route,
     packages_filter: List(#(String, Option(String))),
     packages_filter_input: String,
+    packages_filter_version_input: String,
   )
+}
+
+/// Autocomplete can be used with Package or Version
+pub type Type {
+  Package
+  Version
 }
 
 pub fn new() -> Model {
@@ -45,6 +52,7 @@ pub fn new() -> Model {
     route: route.Home,
     packages_filter: [],
     packages_filter_input: "",
+    packages_filter_version_input: "",
   )
 }
 
@@ -79,8 +87,7 @@ pub fn update_route(model: Model, route: uri.Uri) {
 pub fn select_autocomplete_option(model: Model, package: String) {
   case model.autocomplete {
     None -> model
-    Some(autocomplete) -> {
-      let type_ = autocomplete.type_(autocomplete)
+    Some(#(type_, _autocomplete)) -> {
       let displayed = replace_last_word(model.displayed, package, type_)
       Model(..model, search: displayed, displayed:, autocomplete: None)
     }
@@ -125,8 +132,8 @@ pub fn autocomplete_packages(model: Model) {
   case should_trigger_autocomplete_packages(model.search) {
     Error(_) -> Model(..model, autocomplete: None)
     Ok(search) -> {
-      let type_ = autocomplete.Package
-      let autocomplete = autocomplete.init(type_, model.packages, search)
+      let autocomplete = autocomplete.init(model.packages, search)
+      let autocomplete = #(Package, autocomplete)
       Model(..model, autocomplete: Some(autocomplete))
     }
   }
@@ -140,8 +147,8 @@ pub fn autocomplete_versions(model: Model) {
         Error(_) -> #(model, effects.package_versions(package))
         Ok(package) -> {
           let versions = list.map(package.releases, fn(r) { r.version })
-          let type_ = autocomplete.Version
-          let autocomplete = autocomplete.init(type_, versions, version)
+          let autocomplete = autocomplete.init(versions, version)
+          let autocomplete = #(Version, autocomplete)
           let model = Model(..model, autocomplete: Some(autocomplete))
           #(model, effect.none())
         }
@@ -161,8 +168,9 @@ pub fn select_previous_package(model: Model) -> Model {
 fn map_autocomplete(model: Model, mapper: fn(Autocomplete) -> Autocomplete) {
   case model.autocomplete {
     None -> model
-    Some(autocomplete) -> {
+    Some(#(type_, autocomplete)) -> {
       let autocomplete = mapper(autocomplete)
+      let autocomplete = #(type_, autocomplete)
       let model = Model(..model, autocomplete: Some(autocomplete))
       update_displayed(model)
     }
@@ -172,11 +180,10 @@ fn map_autocomplete(model: Model, mapper: fn(Autocomplete) -> Autocomplete) {
 fn update_displayed(model: Model) {
   case model.autocomplete {
     None -> Model(..model, displayed: model.search)
-    Some(autocomplete) -> {
+    Some(#(type_, autocomplete)) -> {
       case autocomplete.current(autocomplete) {
         None -> Model(..model, displayed: model.search)
         Some(current) -> {
-          let type_ = autocomplete.type_(autocomplete)
           let displayed = replace_last_word(model.displayed, current, type_)
           Model(..model, displayed:)
         }
@@ -185,9 +192,9 @@ fn update_displayed(model: Model) {
   }
 }
 
-fn replace_last_word(content: String, word: String, type_: autocomplete.Type) {
+fn replace_last_word(content: String, word: String, type_: Type) {
   case type_ {
-    autocomplete.Package -> {
+    Package -> {
       let parts = string.split(content, on: " ")
       let length = list.length(parts)
       parts
@@ -195,7 +202,7 @@ fn replace_last_word(content: String, word: String, type_: autocomplete.Type) {
       |> list.append(["#" <> word])
       |> string.join(with: " ")
     }
-    autocomplete.Version -> {
+    Version -> {
       let parts = string.split(content, on: " ")
       let length = list.length(parts)
       let start = list.take(parts, length - 1)

@@ -7,7 +7,6 @@ import gleam/string
 /// obtained through `all` for display purposes.
 pub opaque type Autocomplete {
   Autocomplete(
-    type_: Type,
     all: List(String),
     previous: List(String),
     current: Option(String),
@@ -15,15 +14,10 @@ pub opaque type Autocomplete {
   )
 }
 
-pub type Type {
-  Package
-  Version
-}
-
 /// Initialise the current autocomplete, with no current selected element.
-pub fn init(type_: Type, options: List(String), search: String) -> Autocomplete {
+pub fn init(options: List(String), search: String) -> Autocomplete {
   let options = keep_first_ten_options(options, search)
-  Autocomplete(type_:, all: options, previous: [], current: None, next: options)
+  Autocomplete(all: options, previous: [], current: None, next: options)
 }
 
 pub fn all(autocomplete: Autocomplete) -> List(String) {
@@ -36,10 +30,6 @@ pub fn current(autocomplete: Autocomplete) -> Option(String) {
 
 pub fn selected(autocomplete: Autocomplete, element: String) -> Bool {
   autocomplete.current == Some(element)
-}
-
-pub fn type_(autocomplete: Autocomplete) -> Type {
-  autocomplete.type_
 }
 
 /// Select the next element. If there's no next element, nothing happens.

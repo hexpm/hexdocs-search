@@ -2,7 +2,8 @@ import gleam/dict
 import gleam/dynamic/decode
 import gleam/hexpm
 import gleam/http/response.{type Response}
-import gleam/option.{Some}
+import gleam/list
+import gleam/option.{None, Some}
 import gleam/pair
 import gleam/result
 import gleam/string
@@ -28,7 +29,7 @@ pub fn main() {
 }
 
 fn update(model: Model, msg: Msg) {
-  case msg {
+  case msg |> echo {
     msg.ApiReturnedPackageVersions(package, response) ->
       api_returned_package_versions(model, package, response)
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
@@ -55,14 +56,16 @@ fn update(model: Model, msg: Msg) {
       user_selected_previous_autocomplete_package(model)
     msg.UserSubmittedSearch -> user_submitted_search(model)
 
-    msg.UserEditedPackagesFilter(packages_filter_input:) ->
-      user_edited_packages_filter(model, packages_filter_input)
+    msg.UserDeletedPackagesFilter(filter) ->
+      user_deleted_packages_filter(model, filter)
     msg.UserEditedSearchInput(search_input:) ->
       user_edited_search_input(model, search_input)
     msg.UserSubmittedPackagesFilter -> user_submitted_packages_filter(model)
-    msg.UserSubmittedSearchInput -> user_submitted_search(model)
-    msg.UserSuppressedPackagesFilter(filter:) ->
-      user_suppressed_packages_filter(model, filter)
+    msg.UserSubmittedSearchInput -> user_submitted_search_input(model)
+    msg.UserEditedPackagesFilterInput(content) ->
+      user_edited_packages_filter_input(model, content)
+    msg.UserEditedPackagesFilterVersion(content) ->
+      user_edited_packages_filter_version(model, content)
   }
 }
 
@@ -118,8 +121,27 @@ fn user_edited_search_input(model: Model, search_input: String) {
   |> pair.new(effect.none())
 }
 
+fn user_edited_packages_filter_input(model: Model, content: String) {
+  Model(..model, packages_filter_input: content)
+  |> pair.new(effect.none())
+}
+
+fn user_edited_packages_filter_version(model: Model, content: String) {
+  Model(..model, packages_filter_version_input: content)
+  |> pair.new(effect.none())
+}
+
 fn user_submitted_search(model: Model) {
   let model = model.compute_typesense_input(model)
+  #(model, {
+    route.push(route.Search(
+      q: model.search_input,
+      packages: model.packages_filter,
+    ))
+  })
+}
+
+fn user_submitted_search_input(model: Model) {
   #(model, {
     route.push(route.Search(
       q: model.search_input,
@@ -155,10 +177,15 @@ fn user_clicked_autocomplete_package(model: Model, package: String) {
   })
 }
 
-fn user_edited_packages_filter(model: Model, packages_filter_input) {
-  model
-  // |> model.set_packages_filter_input(packages_filter_input)
-  |> pair.new(effect.none())
+fn user_deleted_packages_filter(model: Model, filter) {
+  let filters = list.filter(model.packages_filter, fn(f) { f != filter })
+  let model = Model(..model, packages_filter: filters)
+  #(model, {
+    route.push(route.Search(
+      q: model.search_input,
+      packages: model.packages_filter,
+    ))
+  })
 }
 
 fn user_clicked_go_back(model: Model) {
@@ -166,21 +193,25 @@ fn user_clicked_go_back(model: Model) {
 }
 
 fn user_submitted_packages_filter(model: Model) {
-  #(model, effect.none())
-  // model.packages_filter
-  // |> list.reverse
-  // |> list.prepend(model.packages_filter_input)
-  // |> list.reverse
-  // |> list.unique
-  // |> model.set_packages_filter(model, _)
-  // |> model.set_packages_filter_input("")
-  // |> pair.new(effect.none())
-}
-
-fn user_suppressed_packages_filter(model: Model, filter: String) {
-  #(model, effect.none())
-  // model.packages_filter
-  // |> list.filter(fn(f) { f != filter })
-  // |> model.set_packages_filter(model, _)
-  // |> pair.new(effect.none())
+  let packages_filter =
+    #(model.packages_filter_input, case model.packages_filter_version_input {
+      "" -> None
+      content -> Some(content)
+    })
+    |> list.wrap
+    |> list.append(model.packages_filter, _)
+    |> list.unique
+  let model =
+    Model(
+      ..model,
+      packages_filter:,
+      packages_filter_input: "",
+      packages_filter_version_input: "",
+    )
+  #(model, {
+    route.push(route.Search(
+      q: model.search_input,
+      packages: model.packages_filter,
+    ))
+  })
 }

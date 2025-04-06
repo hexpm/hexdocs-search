@@ -1,6 +1,7 @@
 import gleam/dynamic/decode
 import gleam/hexpm
 import gleam/http/response
+import gleam/option.{type Option}
 import gleam/uri
 import hexdocs_search/loss.{type Loss}
 
@@ -26,9 +27,10 @@ pub type Msg {
   UserSelectedPreviousAutocompletePackage
   UserSubmittedSearch
 
-  UserEditedPackagesFilter(packages_filter_input: String)
+  UserDeletedPackagesFilter(#(String, Option(String)))
   UserSubmittedPackagesFilter
   UserEditedSearchInput(search_input: String)
   UserSubmittedSearchInput
-  UserSuppressedPackagesFilter(filter: String)
+  UserEditedPackagesFilterInput(String)
+  UserEditedPackagesFilterVersion(String)
 }

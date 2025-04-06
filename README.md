@@ -48,3 +48,15 @@ gleam run -m lustre/dev start
 ```
 
 The project should now be running at `http://localhost:1234`!
+
+## Building the app
+
+Building the app can be done with the Lustre DevTools. If every steps above have
+already been done, it's possible to built the app with the following command.
+
+```sh
+gleam run -m lustre/dev build
+```
+
+Once built, the `priv/` folder and the `index.html` at the root of the project
+are the parts used to deploy the site.

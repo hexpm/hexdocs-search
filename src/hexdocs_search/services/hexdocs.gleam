@@ -2,7 +2,6 @@ import gleam/bool
 import gleam/dynamic/decode
 import gleam/fetch
 import gleam/http/request
-import gleam/http/response
 import gleam/int
 import gleam/javascript/promise
 import gleam/list
@@ -38,35 +37,9 @@ pub type Highlight {
   Highlight(matched_tokens: List(String), snippet: String)
 }
 
-fn packages_mock() {
-  response.new(200)
-  |> response.set_body({
-    "jason
-jose
-joseph
-telemetry
-ranch
-mime
-ssl_verify_fun
-parse_trans
-certifi
-mimerl
-lustre
-gleam_stdlib
-modem
-rsvp
-sketch
-amqp_client
-"
-  })
-  |> Ok
-  |> promise.resolve
-}
-
 pub fn packages() {
   case environment.read() {
-    environment.Development -> packages_mock()
-    environment.Staging | environment.Production -> {
+    environment.Development | environment.Staging | environment.Production -> {
       let endpoint = endpoints.packages()
       let assert Ok(request) = request.from_uri(endpoint)
       fetch.send(request)
@@ -138,11 +111,13 @@ fn add_filter_by_packages_param(
     use p <- list.map(packages)
     case p.1 {
       None -> p.0
-      Some(version) -> p.0 <> "@" <> version
+      Some(version) -> p.0 <> "-" <> version
     }
   }
-  let packages = "package: [" <> string.join(packages, with: ", ") <> "]"
-  list.key_set(query, "filter_by", packages)
+  packages
+  |> list.map(string.append("package:=", _))
+  |> string.join("||")
+  |> list.key_set(query, "filter_by", _)
 }
 
 fn highlight_decoder() {

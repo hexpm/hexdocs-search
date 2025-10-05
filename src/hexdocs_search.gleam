@@ -18,7 +18,7 @@ import hexdocs_search/services/hexdocs
 import hexdocs_search/setup
 import hexdocs_search/view
 import lustre
-import lustre/effect
+import lustre/effect.{type Effect}
 import modem
 
 pub fn main() {
@@ -29,7 +29,7 @@ pub fn main() {
 }
 
 fn update(model: Model, msg: Msg) {
-  case msg |> echo {
+  case msg {
     msg.ApiReturnedPackageVersions(package, response) ->
       api_returned_package_versions(model, package, response)
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
@@ -66,6 +66,9 @@ fn update(model: Model, msg: Msg) {
       user_edited_packages_filter_input(model, content)
     msg.UserEditedPackagesFilterVersion(content) ->
       user_edited_packages_filter_version(model, content)
+    msg.UserToggledPreview(id) -> user_toggled_preview(model, id)
+
+    msg.None -> #(model, effect.none())
   }
 }
 
@@ -73,12 +76,12 @@ fn api_returned_package_versions(
   model: Model,
   package: String,
   response: Loss(Response(hexpm.Package)),
-) -> #(Model, effect.Effect(Msg)) {
+) -> #(Model, Effect(Msg)) {
   case response {
     Ok(response.Response(status: 200, body:, ..)) -> {
       let package_versions = dict.insert(model.package_versions, package, body)
-      let model = Model(..model, package_versions:)
-      model.focus_search(model)
+      Model(..model, package_versions:)
+      |> model.focus_search
     }
     _ -> #(model, toast.error("Server error. Retry later."))
   }
@@ -100,7 +103,7 @@ fn api_returned_typesense_search(
   response: Loss(Response(decode.Dynamic)),
 ) {
   response
-  |> result.then(fn(response) {
+  |> result.try(fn(response) {
     response.body
     |> decode.run(hexdocs.typesense_decoder())
     |> result.map_error(loss.DecodeError)
@@ -214,4 +217,13 @@ fn user_submitted_packages_filter(model: Model) {
       packages: model.packages_filter,
     ))
   })
+}
+
+fn user_toggled_preview(model: Model, id: String) {
+  Model(..model, opened_previews: {
+    use opened <- dict.upsert(model.opened_previews, id)
+    let opened = option.unwrap(opened, False)
+    !opened
+  })
+  |> pair.new(effect.none())
 }

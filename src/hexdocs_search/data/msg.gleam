@@ -33,4 +33,7 @@ pub type Msg {
   UserSubmittedSearchInput
   UserEditedPackagesFilterInput(String)
   UserEditedPackagesFilterVersion(String)
+  UserToggledPreview(id: String)
+
+  None
 }

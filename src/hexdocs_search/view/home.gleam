@@ -2,12 +2,10 @@ import gleam/bool
 import gleam/dynamic/decode
 import gleam/list
 import gleam/option.{None, Some}
-import gleam/result
 import gleam/string
 import hexdocs_search/data/model.{type Model}
 import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/msg
-import hexdocs_search/utils
 import hexdocs_search/view/home/footer
 import lustre/attribute.{class, id}
 import lustre/element
@@ -47,14 +45,14 @@ pub fn home(model: Model) {
               [id("logo"), class("flex items-center justify-start gap-6")],
               [
                 html.img([
-                  attribute.src("/priv/images/hexdocs-logo.svg"),
+                  attribute.src("/images/hexdocs-logo.svg"),
                   attribute.alt("HexDocs Logo"),
                   class("w-auto h-14 lg:w-auto lg:h-24"),
                 ]),
                 html.h1(
                   [
                     class(
-                      "text-gray-700 dark:text-gray-50 text-5xl lg:text-7xl font-calibri",
+                      "text-gray-700 dark:text-gray-50 text-5xl lg:text-7xl font-(family-name:--font-calibri)",
                     ),
                   ],
                   [
@@ -66,7 +64,7 @@ pub fn home(model: Model) {
             ),
             html.form(
               [
-                event.on_submit(msg.UserSubmittedSearch),
+                event.on_submit(fn(_) { msg.UserSubmittedSearch }),
                 id("search"),
                 class(
                   "flex flex-col lg:flex-row items-center gap-4 mt-10 lg:mt-20",
@@ -77,9 +75,9 @@ pub fn home(model: Model) {
                   html.input([
                     attribute.value(model.displayed),
                     event.on_input(msg.UserEditedSearch),
-                    event.on("click", utils.stop_propagation),
+                    event.on_click(msg.None) |> event.stop_propagation,
                     event.on_focus(msg.UserFocusedSearch),
-                    event.on("keydown", on_arrow_up_down),
+                    event.advanced("keydown", on_arrow_up_down()),
                     attribute.autofocus(True),
                     attribute.type_("text"),
                     class("search-input w-full bg-white dark:bg-gray-800"),
@@ -87,7 +85,7 @@ pub fn home(model: Model) {
                       "rounded-lg border border-gray-200 dark:border-gray-700",
                     ),
                     class(
-                      "font-inter placeholder:text-gray-400 dark:placeholder:text-gray-400 text-gray-700 dark:text-gray-100",
+                      "font-(family-name:--font-inter) placeholder:text-gray-400 dark:placeholder:text-gray-400 text-gray-700 dark:text-gray-100",
                     ),
                     class("px-10 py-3"),
                     class(
@@ -108,7 +106,7 @@ pub fn home(model: Model) {
                 html.button(
                   [
                     class(
-                      "px-6 py-3 bg-blue-600 dark:bg-blue-600 text-gray-50 font-inter rounded-lg hover:bg-blue-700 transition duration-200 whitespace-nowrap w-full sm:w-auto",
+                      "px-6 py-3 bg-blue-600 dark:bg-blue-600 text-gray-50 font-(family-name:--font-inter) rounded-lg hover:bg-blue-700 transition duration-200 whitespace-nowrap w-full sm:w-auto",
                     ),
                   ],
                   [html.text("Search Packages")],
@@ -120,13 +118,17 @@ pub fn home(model: Model) {
                 html.h6(
                   [
                     class(
-                      "text-gray-700 dark:text-gray-100 text-xl font-semibold font-inter leading-loose",
+                      "text-gray-700 dark:text-gray-100 text-xl font-semibold font-(family-name:--font-inter) leading-loose",
                     ),
                   ],
                   [html.text("To search specific packages")],
                 ),
                 html.span(
-                  [class("text-gray-600 dark:text-gray-200 font-inter")],
+                  [
+                    class(
+                      "text-gray-600 dark:text-gray-200 font-(family-name:--font-inter)",
+                    ),
+                  ],
                   [html.text("Type ")],
                 ),
                 html.span(
@@ -134,7 +136,11 @@ pub fn home(model: Model) {
                   [html.text("#")],
                 ),
                 html.span(
-                  [class("text-gray-600 dark:text-gray-200 font-inter")],
+                  [
+                    class(
+                      "text-gray-600 dark:text-gray-200 font-(family-name:--font-inter)",
+                    ),
+                  ],
                   [
                     html.text(" to scope your search to one or more packages."),
                     html.br([]),
@@ -146,57 +152,64 @@ pub fn home(model: Model) {
                   [html.text("#<package>:<version>")],
                 ),
                 html.span(
-                  [class("text-gray-600 dark:text-gray-200 font-inter")],
+                  [
+                    class(
+                      "text-gray-600 dark:text-gray-200 font-(family-name:--font-inter)",
+                    ),
+                  ],
                   [html.text(" to pick a specific version.")],
                 ),
               ]),
-              html.div([attribute.class("font-inter mt-10")], [
-                html.h6(
-                  [
-                    attribute.class(
-                      "text-gray-700 dark:text-gray-100 text-xl font-semibold leading-loose",
-                    ),
-                  ],
-                  [
-                    html.text(
-                      "To access a package documentation
+              html.div(
+                [attribute.class("font-(family-name:--font-inter) mt-10")],
+                [
+                  html.h6(
+                    [
+                      attribute.class(
+                        "text-gray-700 dark:text-gray-100 text-xl font-semibold leading-loose",
+                      ),
+                    ],
+                    [
+                      html.text(
+                        "To access a package documentation
                                     ",
-                    ),
-                  ],
-                ),
-                html.span(
-                  [attribute.class("text-gray-600 dark:text-gray-200")],
-                  [html.text("Visit ")],
-                ),
-                html.span(
-                  [
-                    attribute.class(
-                      "text-blue-600 dark:text-blue-600 font-semibold",
-                    ),
-                  ],
-                  [html.text("hexdocs.pm/")],
-                ),
-                html.span(
-                  [attribute.class("text-gray-600 dark:text-gray-200")],
-                  [html.text("<package>")],
-                ),
-                html.span(
-                  [attribute.class("text-gray-600 dark:text-gray-200")],
-                  [html.text(" or ")],
-                ),
-                html.span(
-                  [
-                    attribute.class(
-                      "text-blue-600 dark:text-blue-600 font-semibold",
-                    ),
-                  ],
-                  [html.text("hexdocs.pm/")],
-                ),
-                html.span(
-                  [attribute.class("text-gray-600 dark:text-gray-200")],
-                  [html.text("<package>/<version>")],
-                ),
-              ]),
+                      ),
+                    ],
+                  ),
+                  html.span(
+                    [attribute.class("text-gray-600 dark:text-gray-200")],
+                    [html.text("Visit ")],
+                  ),
+                  html.span(
+                    [
+                      attribute.class(
+                        "text-blue-600 dark:text-blue-600 font-semibold",
+                      ),
+                    ],
+                    [html.text("hexdocs.pm/")],
+                  ),
+                  html.span(
+                    [attribute.class("text-gray-600 dark:text-gray-200")],
+                    [html.text("<package>")],
+                  ),
+                  html.span(
+                    [attribute.class("text-gray-600 dark:text-gray-200")],
+                    [html.text(" or ")],
+                  ),
+                  html.span(
+                    [
+                      attribute.class(
+                        "text-blue-600 dark:text-blue-600 font-semibold",
+                      ),
+                    ],
+                    [html.text("hexdocs.pm/")],
+                  ),
+                  html.span(
+                    [attribute.class("text-gray-600 dark:text-gray-200")],
+                    [html.text("<package>/<version>")],
+                  ),
+                ],
+              ),
             ]),
           ]),
         ]),
@@ -206,23 +219,21 @@ pub fn home(model: Model) {
   )
 }
 
-fn on_arrow_up_down(event: decode.Dynamic) {
-  use key <- result.try(prevent_arrow_event(event))
-  case key {
+fn on_arrow_up_down() {
+  use key <- decode.field("key", decode.string)
+  let message = case key {
     "ArrowDown" -> Ok(msg.UserSelectedNextAutocompletePackage)
     "ArrowUp" -> Ok(msg.UserSelectedPreviousAutocompletePackage)
-    _ -> Error([])
+    // Error case, giving anything to please the decode failure.
+    _ -> Error(msg.None)
   }
-}
-
-fn prevent_arrow_event(event: decode.Dynamic) {
-  let key_decoder = decode.at(["key"], decode.string)
-  let key = decode.run(event, key_decoder) |> result.replace_error([])
-  use key <- result.try(key)
-  let is_arrow = list.contains(["ArrowDown", "ArrowUp"], key)
-  use <- bool.guard(when: !is_arrow, return: Error([]))
-  event.prevent_default(event)
-  Ok(key)
+  case message {
+    Ok(msg) ->
+      event.handler(msg, stop_propagation: False, prevent_default: True)
+    Error(msg) ->
+      event.handler(msg, stop_propagation: False, prevent_default: False)
+  }
+  |> decode.success
 }
 
 fn autocomplete(model: Model) {
@@ -234,7 +245,7 @@ fn autocomplete(model: Model) {
   html.div(
     [
       class(
-        "absolute top-14 w-full bg-white shadow-md rounded-lg overflow-hidden",
+        "absolute top-14 w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden",
       ),
     ],
     [
@@ -247,13 +258,15 @@ fn autocomplete(model: Model) {
           html.div([], {
             use package <- list.map(items)
             let selected = case autocomplete.selected(autocomplete, package) {
-              True -> class("bg-stone-100")
+              True -> class("bg-stone-100 dark:bg-stone-600")
               False -> attribute.none()
             }
             let on_click = on_select_package(package)
             html.div(
               [
-                class("py-2 px-4 text-md hover:bg-stone-200 cursor-pointer"),
+                class(
+                  "py-2 px-4 text-md hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer",
+                ),
                 selected,
                 on_click,
               ],
@@ -271,7 +284,7 @@ fn empty_autocomplete() {
 }
 
 fn on_select_package(package: String) {
-  use event <- event.on("click")
-  event.stop_propagation(event)
-  Ok(msg.UserClickedAutocompletePackage(package))
+  msg.UserClickedAutocompletePackage(package)
+  |> event.on_click
+  |> event.stop_propagation
 }

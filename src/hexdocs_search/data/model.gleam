@@ -29,6 +29,7 @@ pub type Model {
     packages_filter: List(#(String, Option(String))),
     packages_filter_input: String,
     packages_filter_version_input: String,
+    opened_previews: Dict(String, Bool),
   )
 }
 
@@ -53,6 +54,7 @@ pub fn new() -> Model {
     packages_filter: [],
     packages_filter_input: "",
     packages_filter_version_input: "",
+    opened_previews: dict.new(),
   )
 }
 
@@ -229,7 +231,7 @@ fn should_trigger_autocomplete_packages(search: String) {
   search
   |> string.split(on: " ")
   |> list.last
-  |> result.then(fn(search) {
+  |> result.try(fn(search) {
     let length = string.length(search)
     case string.starts_with(search, "#") {
       True -> Ok(string.slice(from: search, at_index: 1, length:))
@@ -244,7 +246,7 @@ fn should_trigger_autocomplete_versions(search: String) {
   search
   |> string.split(on: " ")
   |> list.last
-  |> result.then(fn(search) {
+  |> result.try(fn(search) {
     let length = string.length(search)
     case string.starts_with(search, "#") {
       False -> Error(Nil)

@@ -6,3 +6,7 @@ priv/static/hexdocs_search.mjs
 priv/static/hexdocs_search.css
 building/
 .DS_Store
+
+#Added automatically by Lustre Dev Tools
+/.lustre
+/dist

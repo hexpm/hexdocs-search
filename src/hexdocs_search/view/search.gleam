@@ -1,8 +1,10 @@
+import gleam/dict
 import gleam/dynamic/decode
 import gleam/list
 import gleam/option.{type Option}
 import hexdocs_search/data/model.{type Model}
 import hexdocs_search/data/msg
+import hexdocs_search/services/hex
 import hexdocs_search/services/hexdocs
 import lustre/attribute.{attribute, class}
 import lustre/element
@@ -77,86 +79,89 @@ pub fn search(model: Model) {
                 ],
               ),
             ]),
-            html.form([event.on_submit(msg.UserSubmittedPackagesFilter)], [
-              html.div([class("mt-4 flex gap-2")], [
-                html.div(
-                  [
-                    class(
-                      "flex-grow bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
-                    ),
-                  ],
-                  [
-                    html.input([
+            html.form(
+              [event.on_submit(fn(_) { msg.UserSubmittedPackagesFilter })],
+              [
+                html.div([class("mt-4 flex gap-2")], [
+                  html.div(
+                    [
                       class(
-                        "search-input w-full h-10 bg-transparent px-10 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
+                        "flex-grow bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
                       ),
-                      attribute.placeholder("Package Name"),
-                      attribute.type_("text"),
-                      attribute.value(model.packages_filter_input),
-                      event.on_input(msg.UserEditedPackagesFilterInput),
-                    ]),
-                    html.i(
-                      [
+                    ],
+                    [
+                      html.input([
                         class(
-                          "ri-search-2-line absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 text-lg",
+                          "search-input w-full h-10 bg-transparent px-10 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
                         ),
-                      ],
-                      [],
-                    ),
-                  ],
-                ),
-                html.div(
-                  [
-                    class(
-                      "w-20 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
-                    ),
-                  ],
-                  [
-                    html.input([
+                        attribute.placeholder("Package Name"),
+                        attribute.type_("text"),
+                        attribute.value(model.packages_filter_input),
+                        event.on_input(msg.UserEditedPackagesFilterInput),
+                      ]),
+                      html.i(
+                        [
+                          class(
+                            "ri-search-2-line absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 text-lg",
+                          ),
+                        ],
+                        [],
+                      ),
+                    ],
+                  ),
+                  html.div(
+                    [
                       class(
-                        "search-input w-full h-10 bg-transparent px-2 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
+                        "w-20 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
                       ),
-                      attribute.placeholder("ver"),
-                      attribute.type_("text"),
-                      attribute.value(model.packages_filter_version_input),
-                      event.on_input(msg.UserEditedPackagesFilterVersion),
-                    ]),
-                  ],
-                ),
-              ]),
-              html.div([class("mt-4 flex gap-2")], [
-                html.button(
-                  [
-                    attribute.type_("submit"),
-                    class(
-                      "flex-grow bg-blue-600 hover:bg-blue-700 text-slate-100 rounded-lg h-10 flex items-center justify-center transition duration-200",
-                    ),
-                  ],
-                  [
-                    html.span([class("text-sm font-medium")], [
-                      html.text("+ Add Package"),
-                    ]),
-                  ],
-                ),
-                html.button(
-                  [
-                    class(
-                      "w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
-                    ),
-                  ],
-                  [
-                    html.i(
-                      [
+                    ],
+                    [
+                      html.input([
                         class(
-                          "ri-share-forward-line text-slate-500 dark:text-slate-400 text-lg",
+                          "search-input w-full h-10 bg-transparent px-2 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
                         ),
-                      ],
-                      [],
-                    ),
-                  ],
-                ),
-              ]),
-            ]),
+                        attribute.placeholder("ver"),
+                        attribute.type_("text"),
+                        attribute.value(model.packages_filter_version_input),
+                        event.on_input(msg.UserEditedPackagesFilterVersion),
+                      ]),
+                    ],
+                  ),
+                ]),
+                html.div([class("mt-4 flex gap-2")], [
+                  html.button(
+                    [
+                      attribute.type_("submit"),
+                      class(
+                        "flex-grow bg-blue-600 hover:bg-blue-700 text-slate-100 rounded-lg h-10 flex items-center justify-center transition duration-200",
+                      ),
+                    ],
+                    [
+                      html.span([class("text-sm font-medium")], [
+                        html.text("+ Add Package"),
+                      ]),
+                    ],
+                  ),
+                  html.button(
+                    [
+                      class(
+                        "w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
+                      ),
+                    ],
+                    [
+                      html.i(
+                        [
+                          class(
+                            "ri-share-forward-line text-slate-500 dark:text-slate-400 text-lg",
+                          ),
+                        ],
+                        [],
+                      ),
+                    ],
+                  ),
+                ]),
+              ],
+            ),
             html.hr([class("mt-6 border-slate-200 dark:border-slate-700")]),
             element.fragment({
               list.map(model.packages_filter, fn(filter) {
@@ -196,11 +201,11 @@ pub fn search(model: Model) {
               html.input([
                 attribute.value(model.search_input),
                 event.on_input(msg.UserEditedSearchInput),
-                event.on("keydown", fn(event) {
-                  case decode.run(event, decode.at(["key"], decode.string)) {
-                    Error(_) -> Error([])
-                    Ok("Enter") -> Ok(msg.UserSubmittedSearchInput)
-                    Ok(_) -> Error([])
+                event.on("keydown", {
+                  use key <- decode.field("key", decode.string)
+                  case key {
+                    "Enter" -> decode.success(msg.UserSubmittedSearchInput)
+                    _ -> decode.failure(msg.UserSubmittedSearchInput, "Key")
                   }
                 }),
                 attribute.placeholder("Search for packages..."),
@@ -226,29 +231,13 @@ pub fn search(model: Model) {
               ],
               [],
             ),
-            html.button(
-              [
-                class("p-2 hidden md:flex"),
-                attribute("onclick", "toggleDarkMode()"),
-              ],
-              [
-                html.i(
-                  [
-                    class(
-                      "theme-icon text-xl text-slate-700 dark:text-slate-300",
-                    ),
-                  ],
-                  [],
-                ),
-              ],
-            ),
           ]),
         ]),
         html.div([class("px-5 flex flex-col items-center")], [
           html.div([class("space-y-6 w-full max-w-[800px]")], {
             let results = option.unwrap(model.search_result, #(0, []))
             use result <- list.map(results.1)
-            result_card(result)
+            result_card(model, result)
           }),
         ]),
       ]),
@@ -261,19 +250,23 @@ fn hexdocs_logo() {
     html.img([
       class("w-auto h-10"),
       attribute.alt("HexDocs Logo"),
-      attribute.src("/priv/images/hexdocs-logo.svg"),
+      attribute.src("/images/hexdocs-logo.svg"),
     ]),
     html.div([class("flex items-center")], [
       html.span(
         [
           class(
-            "text-slate-950 dark:text-slate-50 text-lg font-bold font-calibri",
+            "text-slate-950 dark:text-slate-50 text-lg font-bold font-(family-name:--font-calibri)",
           ),
         ],
         [html.text("hex")],
       ),
       html.span(
-        [class("text-slate-950 dark:text-slate-50 text-lg font-calibri")],
+        [
+          class(
+            "text-slate-950 dark:text-slate-50 text-lg font-(family-name:--font-calibri)",
+          ),
+        ],
         [html.text("docs")],
       ),
     ]),
@@ -281,21 +274,16 @@ fn hexdocs_logo() {
 }
 
 fn trash_button(filter: #(String, Option(String))) {
+  let on_delete = event.on_click(msg.UserDeletedPackagesFilter(filter))
   html.div(
+    [class("w-5 h-5 relative overflow-hidden cursor-pointer"), on_delete],
     [
-      class("w-5 h-5 relative overflow-hidden cursor-pointer"),
-      event.on_click(msg.UserDeletedPackagesFilter(filter)),
-    ],
-    [
-      html.i(
-        [class("ri-delete-bin-5-fill text-slate-400 dark:text-slate-500")],
-        [],
-      ),
+      sidebar_icon("ri-delete-bin-5-fill"),
     ],
   )
 }
 
-fn result_card(result: hexdocs.TypeSense) {
+fn result_card(model: Model, result: hexdocs.TypeSense) {
   html.div([class("w-full bg-slate-100 dark:bg-slate-800 rounded-2xl p-4")], [
     html.div([class("text-slate-700 dark:text-slate-300 text-sm")], [
       html.text(result.document.package),
@@ -308,6 +296,16 @@ fn result_card(result: hexdocs.TypeSense) {
       ],
       [html.text(result.document.title)],
     ),
+    // element.unsafe_raw_html(
+    //   "",
+    //   "p",
+    //   [
+    //     class(
+    //       "mt-4 text-slate-800 dark:text-slate-300 leading-normal line-clamp-2 overflow-hidden",
+    //     ),
+    //   ],
+    //   result.document.doc,
+    // ),
     html.div(
       [
         class(
@@ -322,30 +320,31 @@ fn result_card(result: hexdocs.TypeSense) {
     ),
     case result.highlight {
       hexdocs.Highlights(doc: option.Some(doc), ..) -> {
-        html.p(
+        element.unsafe_raw_html(
+          "",
+          "p",
           [
             class(
               "mt-4 text-slate-800 dark:text-slate-300 leading-normal line-clamp-2 overflow-hidden",
             ),
-            attribute.attribute("dangerous-unescaped-html", doc.snippet),
           ],
-          [
-            // html.text("Channels are a really good abstraction"),
-          // html.span(
-          //   [class("bg-slate-950 text-slate-100 px-1 rounded")],
-          //   [html.text("for")],
-          // ),
-          // html.text(
-          //   "real-time communication. They are bi-directional and persistent connections between the browser and server...",
-          // ),
-          ],
+          doc.snippet,
         )
+        // html.text("Channels are a really good abstraction"),
+        // html.span(
+        //   [class("bg-slate-950 text-slate-100 px-1 rounded")],
+        //   [html.text("for")],
+        // ),
+        // html.text(
+        //   "real-time communication. They are bi-directional and persistent connections between the browser and server...",
+        // )
       }
       _ -> element.none()
     },
     html.div([class("mt-4 flex flex-wrap gap-3")], [
       html.button(
         [
+          event.on_click(msg.UserToggledPreview(result.document.id)),
           class(
             "h-10 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
           ),
@@ -355,18 +354,12 @@ fn result_card(result: hexdocs.TypeSense) {
             [class("text-slate-800 dark:text-slate-200 text-sm font-semibold")],
             [html.text("Show Preview")],
           ),
-          html.i(
-            [
-              class(
-                "ri-arrow-down-s-line ml-2 text-slate-500 dark:text-slate-400",
-              ),
-            ],
-            [],
-          ),
+          card_icon("ri-arrow-down-s-line"),
         ],
       ),
-      html.button(
+      html.a(
         [
+          attribute.href(hex.go_to_link(result.document)),
           class(
             "h-10 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
           ),
@@ -376,16 +369,37 @@ fn result_card(result: hexdocs.TypeSense) {
             [class("text-slate-800 dark:text-slate-200 text-sm font-semibold")],
             [html.text("Go to Page")],
           ),
-          html.i(
-            [
-              class(
-                "ri-external-link-line ml-2 text-slate-500 dark:text-slate-400",
-              ),
-            ],
-            [],
-          ),
+          card_icon("ri-external-link-line"),
         ],
       ),
     ]),
+    case dict.get(model.opened_previews, result.document.id) {
+      Ok(False) | Error(_) -> element.none()
+      Ok(True) -> {
+        case hex.preview_link(result.document, "light") {
+          Error(_) -> element.none()
+          Ok(link) -> {
+            html.div([class("h-100 pt-4")], [
+              html.iframe([
+                class("size-full rounded-lg shadow-sm"),
+                attribute.src(link),
+              ]),
+            ])
+          }
+        }
+      }
+    },
   ])
+}
+
+fn sidebar_icon(icon: String) {
+  let icon = class(icon)
+  let default = class("text-slate-400 dark:text-slate-500")
+  html.i([icon, default], [])
+}
+
+fn card_icon(icon: String) {
+  let icon = class(icon)
+  let default = class("ml-2 text-slate-500 dark:text-slate-400")
+  html.i([icon, default], [])
 }

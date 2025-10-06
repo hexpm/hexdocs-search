@@ -1,8 +1,11 @@
+import gleam/bool
 import gleam/dict
 import gleam/dynamic/decode
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option.{None, Some}
+import gleam/string
 import hexdocs_search/data/model.{type Model}
+import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/msg
 import hexdocs_search/services/hex
 import hexdocs_search/services/hexdocs
@@ -47,7 +50,7 @@ pub fn search(model: Model) {
       html.div(
         [
           class(
-            "w-80 h-screen bg-slate-100 dark:bg-slate-800 fixed md:static z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out",
+            "w-80 h-screen bg-slate-100 dark:bg-slate-800 fixed md:static z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out top-0",
           ),
           attribute.id("sidebar"),
         ],
@@ -91,13 +94,22 @@ pub fn search(model: Model) {
                     ],
                     [
                       html.input([
+                        attribute.id("search-package-input"),
                         class(
                           "search-input w-full h-10 bg-transparent px-10 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
                         ),
                         attribute.placeholder("Package Name"),
                         attribute.type_("text"),
-                        attribute.value(model.packages_filter_input),
+                        attribute.value(
+                          model.search_packages_filter_input_displayed,
+                        ),
                         event.on_input(msg.UserEditedPackagesFilterInput),
+                        event.on_focus(msg.UserFocusedPackagesFilterInput),
+                        event.on_click(msg.None) |> event.stop_propagation,
+                        event.advanced(
+                          "keydown",
+                          on_arrow_up_down(model.Package),
+                        ),
                       ]),
                       html.i(
                         [
@@ -106,6 +118,11 @@ pub fn search(model: Model) {
                           ),
                         ],
                         [],
+                      ),
+                      autocomplete(
+                        model,
+                        model.Package,
+                        model.AutocompleteOnPackage,
                       ),
                     ],
                   ),
@@ -117,14 +134,34 @@ pub fn search(model: Model) {
                     ],
                     [
                       html.input([
+                        attribute.id("search-version-input"),
                         class(
-                          "search-input w-full h-10 bg-transparent px-2 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
+                          "search-input w-full h-10 bg-transparent px-2 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-[0.2]",
                         ),
                         attribute.placeholder("ver"),
                         attribute.type_("text"),
-                        attribute.value(model.packages_filter_version_input),
+                        attribute.value(
+                          model.search_packages_filter_version_input_displayed,
+                        ),
+                        attribute.disabled(
+                          !list.contains(
+                            model.packages,
+                            model.search_packages_filter_input_displayed,
+                          ),
+                        ),
                         event.on_input(msg.UserEditedPackagesFilterVersion),
+                        event.on_focus(msg.UserFocusedPackagesFilterVersion),
+                        event.on_click(msg.None) |> event.stop_propagation,
+                        event.advanced(
+                          "keydown",
+                          on_arrow_up_down(model.Version),
+                        ),
                       ]),
+                      autocomplete(
+                        model,
+                        model.Version,
+                        model.AutocompleteOnVersion,
+                      ),
                     ],
                   ),
                 ]),
@@ -164,32 +201,32 @@ pub fn search(model: Model) {
             ),
             html.hr([class("mt-6 border-slate-200 dark:border-slate-700")]),
             element.fragment({
-              list.map(model.packages_filter, fn(filter) {
-                html.div([class("flex justify-between items-center mt-4")], [
-                  html.div(
-                    [class("inline-flex flex-col justify-start items-start")],
-                    [
-                      html.div(
-                        [
-                          class(
-                            "self-stretch justify-start text-gray-950 dark:text-slate-50 text-lg font-semibold leading-none",
-                          ),
-                        ],
-                        [html.text(filter.0)],
-                      ),
-                      html.div(
-                        [
-                          class(
-                            "self-stretch justify-start text-slate-700 dark:text-slate-400 text-sm font-normal leading-none",
-                          ),
-                        ],
-                        [html.text(filter.1 |> option.unwrap("latest"))],
-                      ),
-                    ],
-                  ),
-                  trash_button(filter),
-                ])
-              })
+              use filter <- list.map(model.search_packages_filters)
+              let #(package, version) = filter
+              html.div([class("flex justify-between items-center mt-4")], [
+                html.div(
+                  [class("inline-flex flex-col justify-start items-start")],
+                  [
+                    html.div(
+                      [
+                        class(
+                          "self-stretch justify-start text-gray-950 dark:text-slate-50 text-lg font-semibold leading-none",
+                        ),
+                      ],
+                      [html.text(package)],
+                    ),
+                    html.div(
+                      [
+                        class(
+                          "self-stretch justify-start text-slate-700 dark:text-slate-400 text-sm font-normal leading-none",
+                        ),
+                      ],
+                      [html.text(version)],
+                    ),
+                  ],
+                ),
+                trash_button(filter),
+              ])
             }),
           ]),
         ],
@@ -245,6 +282,88 @@ pub fn search(model: Model) {
   ])
 }
 
+fn on_arrow_up_down(type_: model.Type) {
+  use key <- decode.field("key", decode.string)
+  let message = case key, type_ {
+    "ArrowDown", _ -> Ok(msg.UserSelectedNextAutocompletePackage)
+    "ArrowUp", _ -> Ok(msg.UserSelectedPreviousAutocompletePackage)
+    "Enter", model.Package -> Ok(msg.UserSelectedPackageFilter)
+    "Enter", model.Version -> Ok(msg.UserSelectedPackageFilterVersion)
+    // Error case, giving anything to please the decode failure.
+    _, _ -> Error(msg.None)
+  }
+  case message {
+    Ok(msg) ->
+      event.handler(msg, stop_propagation: False, prevent_default: True)
+    Error(msg) ->
+      event.handler(msg, stop_propagation: False, prevent_default: False)
+  }
+  |> decode.success
+}
+
+fn autocomplete(
+  model: Model,
+  type_: model.Type,
+  opened: model.AutocompleteFocused,
+) -> element.Element(msg.Msg) {
+  let no_search = case type_ {
+    model.Package -> string.is_empty(model.search_packages_filter_input)
+    model.Version -> False
+  }
+  let no_autocomplete = option.is_none(model.autocomplete)
+  use <- bool.lazy_guard(
+    when: model.autocomplete_search_focused != opened,
+    return: element.none,
+  )
+  use <- bool.lazy_guard(when: no_search, return: element.none)
+  use <- bool.lazy_guard(when: no_autocomplete, return: element.none)
+  html.div(
+    [
+      class(
+        "absolute top-14 w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden",
+      ),
+    ],
+    [
+      case model.autocomplete {
+        None -> element.none()
+        Some(#(_type_, autocomplete)) -> {
+          let items = autocomplete.all(autocomplete)
+          let is_empty = list.is_empty(items)
+          use <- bool.lazy_guard(when: is_empty, return: empty_autocomplete)
+          html.div([], {
+            use package <- list.map(items)
+            let selected = case autocomplete.selected(autocomplete, package) {
+              True -> class("bg-stone-100 dark:bg-stone-600")
+              False -> attribute.none()
+            }
+            let on_click = on_select_package(package)
+            html.div(
+              [
+                class(
+                  "py-2 px-4 text-md hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer",
+                ),
+                selected,
+                on_click,
+              ],
+              [html.text(package)],
+            )
+          })
+        }
+      },
+    ],
+  )
+}
+
+fn empty_autocomplete() {
+  html.text("No packages found")
+}
+
+fn on_select_package(package: String) {
+  msg.UserClickedAutocompletePackage(package)
+  |> event.on_click
+  |> event.stop_propagation
+}
+
 fn hexdocs_logo() {
   html.a([class("flex items-center gap-2"), attribute.href("/")], [
     html.img([
@@ -256,16 +375,14 @@ fn hexdocs_logo() {
       html.span(
         [
           class(
-            "text-slate-950 dark:text-slate-50 text-lg font-bold font-(family-name:--font-calibri)",
+            "text-slate-950 text-lg font-bold font-(family-name:--font-calibri)",
           ),
         ],
         [html.text("hex")],
       ),
       html.span(
         [
-          class(
-            "text-slate-950 dark:text-slate-50 text-lg font-(family-name:--font-calibri)",
-          ),
+          class("text-slate-950 text-lg font-(family-name:--font-calibri)"),
         ],
         [html.text("docs")],
       ),
@@ -273,7 +390,7 @@ fn hexdocs_logo() {
   ])
 }
 
-fn trash_button(filter: #(String, Option(String))) {
+fn trash_button(filter: #(String, String)) {
   let on_delete = event.on_click(msg.UserDeletedPackagesFilter(filter))
   html.div(
     [class("w-5 h-5 relative overflow-hidden cursor-pointer"), on_delete],
@@ -319,7 +436,7 @@ fn result_card(model: Model, result: hexdocs.TypeSense) {
       ],
     ),
     case result.highlight {
-      hexdocs.Highlights(doc: option.Some(doc), ..) -> {
+      hexdocs.Highlights(doc: Some(doc), ..) -> {
         element.unsafe_raw_html(
           "",
           "p",
@@ -357,23 +474,31 @@ fn result_card(model: Model, result: hexdocs.TypeSense) {
           card_icon("ri-arrow-down-s-line"),
         ],
       ),
-      html.a(
-        [
-          attribute.href(hex.go_to_link(result.document)),
-          class(
-            "h-10 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
-          ),
-        ],
-        [
-          html.span(
-            [class("text-slate-800 dark:text-slate-200 text-sm font-semibold")],
-            [html.text("Go to Page")],
-          ),
-          card_icon("ri-external-link-line"),
-        ],
-      ),
+      case hex.go_to_link(result.document) {
+        Error(_) -> element.none()
+        Ok(link) ->
+          html.a(
+            [
+              attribute.href(link),
+              class(
+                "h-10 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
+              ),
+            ],
+            [
+              html.span(
+                [
+                  class(
+                    "text-slate-800 dark:text-slate-200 text-sm font-semibold",
+                  ),
+                ],
+                [html.text("Go to Page")],
+              ),
+              card_icon("ri-external-link-line"),
+            ],
+          )
+      },
     ]),
-    case dict.get(model.opened_previews, result.document.id) {
+    case dict.get(model.search_opened_previews, result.document.id) {
       Ok(False) | Error(_) -> element.none()
       Ok(True) -> {
         case hex.preview_link(result.document, "light") {

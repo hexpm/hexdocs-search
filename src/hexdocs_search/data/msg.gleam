@@ -1,39 +1,46 @@
-import gleam/dynamic/decode
+import gleam/dynamic.{type Dynamic}
 import gleam/hexpm
-import gleam/http/response
-import gleam/option.{type Option}
+import gleam/http/response.{type Response}
 import gleam/uri
 import hexdocs_search/loss.{type Loss}
 
 pub type Msg {
+  // API messages.
   ApiReturnedPackageVersions(
     package: String,
-    response: Loss(response.Response(hexpm.Package)),
+    response: Loss(Response(hexpm.Package)),
   )
-  ApiReturnedPackages(Loss(response.Response(String)))
-  ApiReturnedTypesenseSearch(Loss(response.Response(decode.Dynamic)))
+  ApiReturnedPackages(Loss(Response(String)))
+  ApiReturnedTypesenseSearch(Loss(Response(Dynamic)))
 
+  // Application messages.
   DocumentChangedLocation(location: uri.Uri)
   DocumentRegisteredEventListener(unsubscriber: fn() -> Nil)
-
-  UserToggledDarkMode
   UserClickedGoBack
+  UserToggledDarkMode
 
-  UserFocusedSearch
+  // Home page messages.
   UserBlurredSearch
-  UserEditedSearch(search: String)
   UserClickedAutocompletePackage(package: String)
+  UserEditedSearch(search: String)
+  UserFocusedSearch
   UserSelectedNextAutocompletePackage
   UserSelectedPreviousAutocompletePackage
   UserSubmittedSearch
 
-  UserDeletedPackagesFilter(#(String, Option(String)))
-  UserSubmittedPackagesFilter
-  UserEditedSearchInput(search_input: String)
-  UserSubmittedSearchInput
+  // Search page messages.
+  UserDeletedPackagesFilter(#(String, String))
   UserEditedPackagesFilterInput(String)
   UserEditedPackagesFilterVersion(String)
+  UserEditedSearchInput(search_input: String)
+  UserFocusedPackagesFilterInput
+  UserFocusedPackagesFilterVersion
+  UserSelectedPackageFilter
+  UserSelectedPackageFilterVersion
+  UserSubmittedPackagesFilter
+  UserSubmittedSearchInput
   UserToggledPreview(id: String)
 
+  // Neutral element, because we need to call `stop_propagation` conditionnally.
   None
 }

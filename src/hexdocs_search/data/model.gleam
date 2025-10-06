@@ -16,24 +16,67 @@ import lustre/effect
 
 pub type Model {
   Model(
-    packages: List(String),
-    search: String,
-    search_input: String,
-    displayed: String,
-    search_focused: Bool,
-    autocomplete: Option(#(Type, Autocomplete)),
-    package_versions: Dict(String, hexpm.Package),
-    dom_click_unsubscriber: Option(fn() -> Nil),
-    search_result: Option(#(Int, List(hexdocs.TypeSense))),
+    /// Current route of the application. Mapping `window.location` <=> `Route`.
     route: Route,
-    packages_filter: List(#(String, Option(String))),
-    packages_filter_input: String,
-    packages_filter_version_input: String,
-    opened_previews: Dict(String, Bool),
+    /// When focusing the autocomplete, clicking on the DOM should close it.
+    /// To listen to such event, an event listener on the `document` should be
+    /// setup. It should be cleaned atferwards, if the user closed the
+    /// autocomplete while not clicking on the DOM (for example, because the
+    /// user accepted a proposition). `dom_click_unsubscriber` stores the
+    /// function to revoke the event listener.
+    dom_click_unsubscriber: Option(fn() -> Nil),
+    /// Stores the content of the `https://hexdocs.pm/package_names.csv`.
+    packages: List(String),
+    /// Stores the different versions of a package.
+    /// `Dict(Package Name, hexpm.Package)`.
+    packages_versions: Dict(String, hexpm.Package),
+    /// Stores the content of the search input on the home page, entered
+    /// by the user.
+    home_input: String,
+    /// Stores the current displayed content of the search input on the home
+    /// page. Differs from `home_input` as, like on Google Search, hovering on
+    /// the autocomplete will update the displayed value in the input, to let
+    /// the user to continue typing after selecting an item. \
+    /// For instance, a user could type `#lus`, select `lustre` in the
+    /// autocomplete, the input will display `#lustre`, and the user can then
+    /// type `:`. The input will be `#lustre:`, and it will trigger the
+    /// autocomplete package versions.
+    home_input_displayed: String,
+    /// Stores the current state of the autocomplete. The autocomplete can be
+    /// triggered for packages and version numbers.
+    autocomplete: Option(#(Type, Autocomplete)),
+    /// Whether the autocomplete is focused, or not.
+    autocomplete_search_focused: AutocompleteFocused,
+    /// Keeps the results from TypeSense.
+    /// `#(Page, List(Results))`.
+    search_result: Option(#(Int, List(hexdocs.TypeSense))),
+    /// Stores the current value of the search bar on top of the search page.
+    search_input: String,
+    /// Stores the current state of the different previews opened in
+    /// the search results, in the search page. An item missing from the
+    /// `Dict` indicates a preview _not_ openend.
+    search_opened_previews: Dict(String, Bool),
+    /// Stores the current value of the packages filter input on
+    /// left of the search page.
+    search_packages_filter_input: String,
+    search_packages_filter_input_displayed: String,
+    /// Stores the current value of the packages version input on
+    /// left of the search page.
+    search_packages_filter_version_input: String,
+    search_packages_filter_version_input_displayed: String,
+    /// Store the current set packages filters.
+    search_packages_filters: List(#(String, String)),
   )
 }
 
-/// Autocomplete can be used with Package or Version
+pub type AutocompleteFocused {
+  AutocompleteClosed
+  AutocompleteOnHome
+  AutocompleteOnPackage
+  AutocompleteOnVersion
+}
+
+/// Autocomplete can be used with Package or Version.
 pub type Type {
   Package
   Version
@@ -41,65 +84,142 @@ pub type Type {
 
 pub fn new() -> Model {
   Model(
-    packages: [],
-    search: "",
-    search_input: "",
-    displayed: "",
-    search_focused: False,
-    autocomplete: None,
-    package_versions: dict.new(),
-    dom_click_unsubscriber: None,
-    search_result: None,
     route: route.Home,
-    packages_filter: [],
-    packages_filter_input: "",
-    packages_filter_version_input: "",
-    opened_previews: dict.new(),
+    dom_click_unsubscriber: None,
+    packages: [],
+    packages_versions: dict.new(),
+    home_input: "",
+    home_input_displayed: "",
+    autocomplete: None,
+    autocomplete_search_focused: AutocompleteClosed,
+    search_result: None,
+    search_input: "",
+    search_opened_previews: dict.new(),
+    search_packages_filter_input: "",
+    search_packages_filter_input_displayed: "",
+    search_packages_filter_version_input: "",
+    search_packages_filter_version_input_displayed: "",
+    search_packages_filters: [],
   )
 }
 
+/// Add packages in the `Model`, allowing them to be easily parsed, used in
+/// autocomplete, etc. The `Model` acts as a cache for the packages list,
+/// fetched at every application startup.
 pub fn add_packages(model: Model, packages: List(String)) {
+  let packages = list.filter(packages, fn(p) { p != "" })
   Model(..model, packages:)
 }
 
-pub fn update_search(model: Model, search: String) {
-  Model(..model, search:, displayed: search)
-  |> autocomplete_packages
-  |> autocomplete_versions
+pub fn update_home_search(model: Model, home_input: String) {
+  Model(..model, home_input:, home_input_displayed: home_input)
+  |> autocomplete_packages(home_input)
+  |> autocomplete_versions(home_input)
 }
 
-pub fn focus_search(model: Model) {
-  Model(..model, search_focused: True)
-  |> autocomplete_packages
-  |> autocomplete_versions
+pub fn focus_home_search(model: Model) {
+  Model(
+    ..model,
+    autocomplete_search_focused: case
+      model.autocomplete_search_focused,
+      model.route
+    {
+      AutocompleteClosed, route.Home -> AutocompleteOnHome
+      state, _ -> state
+    },
+  )
+  |> autocomplete_packages(model.home_input)
+  |> autocomplete_versions(model.home_input)
+}
+
+pub fn focus_packages_filter_search(model: Model) {
+  Model(..model, autocomplete_search_focused: AutocompleteOnPackage)
+  |> autocomplete_packages(model.search_packages_filter_input)
+}
+
+pub fn focus_packages_filter_version_search(model: Model) {
+  Model(..model, autocomplete_search_focused: AutocompleteOnVersion)
+  |> autocomplete_versions(model.search_packages_filter_version_input_displayed)
 }
 
 pub fn update_route(model: Model, route: uri.Uri) {
   let route = route.from_uri(route)
-  let model = Model(..model, route:)
+  let model =
+    Model(
+      ..model,
+      route:,
+      search_packages_filter_version_input: "",
+      search_packages_filter_version_input_displayed: "",
+      search_packages_filter_input: "",
+      search_packages_filter_input_displayed: "",
+    )
   case route {
     route.Home | route.NotFound -> #(model, effect.none())
     route.Search(q:, packages:) -> {
-      Model(..model, search_input: q, packages_filter: packages)
+      Model(..model, search_input: q, search_packages_filters: packages)
       |> pair.new(effects.typesense_search(q, packages))
     }
   }
 }
 
 pub fn select_autocomplete_option(model: Model, package: String) {
-  case model.autocomplete {
-    None -> model
-    Some(#(type_, _autocomplete)) -> {
-      let displayed = replace_last_word(model.displayed, package, type_)
-      Model(..model, search: displayed, displayed:, autocomplete: None)
+  case model.autocomplete, model.route {
+    None, _ -> model
+    Some(_), route.NotFound -> model
+    Some(#(type_, _autocomplete)), route.Home -> {
+      let home_input_displayed =
+        replace_last_word(model.home_input_displayed, package, type_)
+      Model(
+        ..model,
+        home_input: home_input_displayed,
+        home_input_displayed:,
+        autocomplete: None,
+      )
+    }
+    Some(#(type_, _autocomplete)), route.Search(..) -> {
+      let model = Model(..model, autocomplete: None)
+      case type_ {
+        Package -> {
+          model.packages
+          |> list.find(fn(p) { p == package })
+          |> result.map(fn(_) {
+            Model(
+              ..model,
+              search_packages_filter_input: package,
+              search_packages_filter_input_displayed: package,
+            )
+          })
+          |> result.unwrap(model)
+        }
+        Version -> {
+          let version = package
+          let package = model.search_packages_filter_input_displayed
+          model.packages_versions
+          |> dict.get(package)
+          |> result.map(fn(package) { package.releases })
+          |> result.try(list.find(_, fn(r) { r.version == version }))
+          |> result.map(fn(_) {
+            Model(
+              ..model,
+              search_packages_filter_version_input: version,
+              search_packages_filter_version_input_displayed: version,
+            )
+          })
+          |> result.unwrap(model)
+        }
+      }
     }
   }
 }
 
-pub fn compute_typesense_input(model: Model) -> Model {
-  let segments = string.split(model.displayed, on: " ")
-  let packages_filter = list.filter_map(segments, version.match_package)
-  Model(..model, packages_filter:, search_input: {
+/// When going from the home page, where you have a free text input to the
+/// search page, it's needed to keep the different parts of the search, while
+/// changing how they're handled in the model. That function transforms the
+/// simple text input in the advanced filters parts in the Model.
+pub fn compute_filters_input(model: Model) -> Model {
+  let segments = string.split(model.home_input_displayed, on: " ")
+  let search_packages_filters = list.filter_map(segments, version.match_package)
+  Model(..model, search_packages_filters:, search_input: {
     segments
     |> list.filter(fn(s) { version.match_package(s) |> result.is_error })
     |> string.join(with: " ")
@@ -117,21 +237,23 @@ pub fn set_search_results(
 pub fn blur_search(model: Model) {
   Model(
     ..model,
-    search_focused: False,
+    autocomplete_search_focused: AutocompleteClosed,
     autocomplete: None,
-    search: model.displayed,
+    home_input: model.home_input_displayed,
     dom_click_unsubscriber: None,
   )
-  |> pair.new({
-    use _ <- effect.from()
-    let none = fn() { Nil }
-    let unsubscriber = option.unwrap(model.dom_click_unsubscriber, none)
-    unsubscriber()
-  })
+  |> pair.new({ unsubscribe_dom_listener(model) })
 }
 
-pub fn autocomplete_packages(model: Model) {
-  case should_trigger_autocomplete_packages(model.search) {
+pub fn unsubscribe_dom_listener(model: Model) {
+  use _ <- effect.from()
+  let none = fn() { Nil }
+  let unsubscriber = option.unwrap(model.dom_click_unsubscriber, none)
+  unsubscriber()
+}
+
+pub fn autocomplete_packages(model: Model, search: String) {
+  case should_trigger_autocomplete_packages(model, search) {
     Error(_) -> Model(..model, autocomplete: None)
     Ok(search) -> {
       let autocomplete = autocomplete.init(model.packages, search)
@@ -141,11 +263,11 @@ pub fn autocomplete_packages(model: Model) {
   }
 }
 
-pub fn autocomplete_versions(model: Model) {
-  case should_trigger_autocomplete_versions(model.search) {
+pub fn autocomplete_versions(model: Model, search: String) {
+  case should_trigger_autocomplete_versions(model, search) {
     Error(_) -> #(model, effect.none())
     Ok(#(package, version)) -> {
-      case dict.get(model.package_versions, package) {
+      case dict.get(model.packages_versions, package) {
         Error(_) -> #(model, effects.package_versions(package))
         Ok(package) -> {
           let versions = list.map(package.releases, fn(r) { r.version })
@@ -160,11 +282,13 @@ pub fn autocomplete_versions(model: Model) {
 }
 
 pub fn select_next_package(model: Model) -> Model {
-  map_autocomplete(model, autocomplete.next)
+  use autocomplete <- map_autocomplete(model)
+  autocomplete.next(autocomplete)
 }
 
 pub fn select_previous_package(model: Model) -> Model {
-  map_autocomplete(model, autocomplete.previous)
+  use autocomplete <- map_autocomplete(model)
+  autocomplete.previous(autocomplete)
 }
 
 fn map_autocomplete(model: Model, mapper: fn(Autocomplete) -> Autocomplete) {
@@ -174,22 +298,37 @@ fn map_autocomplete(model: Model, mapper: fn(Autocomplete) -> Autocomplete) {
       let autocomplete = mapper(autocomplete)
       let autocomplete = #(type_, autocomplete)
       let model = Model(..model, autocomplete: Some(autocomplete))
-      update_displayed(model)
+      update_displayed(model, autocomplete)
     }
   }
 }
 
-fn update_displayed(model: Model) {
-  case model.autocomplete {
-    None -> Model(..model, displayed: model.search)
-    Some(#(type_, autocomplete)) -> {
-      case autocomplete.current(autocomplete) {
-        None -> Model(..model, displayed: model.search)
-        Some(current) -> {
-          let displayed = replace_last_word(model.displayed, current, type_)
-          Model(..model, displayed:)
-        }
-      }
+fn update_displayed(model: Model, autocomplete: #(Type, Autocomplete)) {
+  let #(type_, autocomplete) = autocomplete
+  case autocomplete.current(autocomplete), model.route, type_ {
+    _, route.NotFound, _ -> model
+    None, route.Home, _ ->
+      Model(..model, home_input_displayed: model.home_input)
+    None, route.Search(..), Package -> {
+      Model(..model, search_packages_filter_input_displayed: {
+        model.search_packages_filter_input
+      })
+    }
+    None, route.Search(..), Version -> {
+      Model(..model, search_packages_filter_version_input_displayed: {
+        model.search_packages_filter_version_input
+      })
+    }
+    Some(current), route.Home, _ -> {
+      let home_input_displayed =
+        replace_last_word(model.home_input_displayed, current, type_)
+      Model(..model, home_input_displayed:)
+    }
+    Some(current), route.Search(..), Package -> {
+      Model(..model, search_packages_filter_input_displayed: current)
+    }
+    Some(current), route.Search(..), Version -> {
+      Model(..model, search_packages_filter_version_input_displayed: current)
     }
   }
 }
@@ -225,7 +364,13 @@ fn replace_last_word(content: String, word: String, type_: Type) {
   }
 }
 
-fn should_trigger_autocomplete_packages(search: String) {
+/// Autocomplete is triggered on multiple cases:
+/// - On home page (`model.route` is `route.Home`), when the user typed `#`,
+///   the autocomplete will trigger.
+/// - On search page (`model.route` is `route.Search(..)`), when the user
+///   focuses the input, the autocomplete will instantly trigger.
+/// `should_trigger_autocomplete_packages` returns the string to match on.
+fn should_trigger_autocomplete_packages(model: Model, search: String) {
   let no_search = string.is_empty(search) || string.ends_with(search, " ")
   use <- bool.guard(when: no_search, return: Error(Nil))
   search
@@ -233,29 +378,44 @@ fn should_trigger_autocomplete_packages(search: String) {
   |> list.last
   |> result.try(fn(search) {
     let length = string.length(search)
-    case string.starts_with(search, "#") {
-      True -> Ok(string.slice(from: search, at_index: 1, length:))
-      False -> Error(Nil)
+    case string.starts_with(search, "#"), model.route {
+      True, _ -> Ok(string.slice(from: search, at_index: 1, length:))
+      False, route.Search(..) -> Ok(search)
+      False, _ -> Error(Nil)
     }
   })
 }
 
-fn should_trigger_autocomplete_versions(search: String) {
-  let no_search = string.is_empty(search) || string.ends_with(search, " ")
-  use <- bool.guard(when: no_search, return: Error(Nil))
-  search
-  |> string.split(on: " ")
-  |> list.last
-  |> result.try(fn(search) {
-    let length = string.length(search)
-    case string.starts_with(search, "#") {
-      False -> Error(Nil)
-      True ->
-        case string.split(search, on: ":") {
-          [word, version] ->
-            Ok(#(string.slice(from: word, at_index: 1, length:), version))
-          _ -> Error(Nil)
+/// Autocomplete is triggered on multiple cases:
+/// - On home page (`model.route` is `route.Home`), when the user typed `:`,
+///   the autocomplete will trigger.
+/// - On search page (`model.route` is `route.Search(..)`), when the user
+///   focus the input, the autocomplete will instantly trigger
+///   iif the package is correctly selected.
+/// `should_trigger_autocomplete_packages` returns the string to match on.
+fn should_trigger_autocomplete_versions(model: Model, search: String) {
+  case model.route, search {
+    route.NotFound, _ -> Error(Nil)
+    route.Home, "" -> Error(Nil)
+    route.Search(..), _ ->
+      Ok(#(model.search_packages_filter_input_displayed, ""))
+    route.Home, search -> {
+      use <- bool.guard(when: string.ends_with(search, " "), return: Error(Nil))
+      search
+      |> string.split(on: " ")
+      |> list.last
+      |> result.try(fn(search) {
+        let length = string.length(search)
+        case string.starts_with(search, "#") {
+          False -> Error(Nil)
+          True ->
+            case string.split(search, on: ":") {
+              [word, version] ->
+                Ok(#(string.slice(from: word, at_index: 1, length:), version))
+              _ -> Error(Nil)
+            }
         }
+      })
     }
-  })
+  }
 }

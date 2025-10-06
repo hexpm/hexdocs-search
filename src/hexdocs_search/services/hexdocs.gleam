@@ -51,7 +51,7 @@ pub fn packages() {
 
 pub fn typesense_search(
   query: String,
-  packages: List(#(String, Option(String))),
+  packages: List(#(String, String)),
   page: Int,
 ) {
   let query = new_search_query_params(query, packages, page)
@@ -91,7 +91,7 @@ pub fn typesense_decoder() {
 
 fn new_search_query_params(
   query: String,
-  packages: List(#(String, Option(String))),
+  packages: List(#(String, String)),
   page: Int,
 ) {
   list.new()
@@ -104,17 +104,11 @@ fn new_search_query_params(
 
 fn add_filter_by_packages_param(
   query: List(#(String, String)),
-  packages: List(#(String, Option(String))),
+  packages: List(#(String, String)),
 ) -> List(#(String, String)) {
   use <- bool.guard(when: list.is_empty(packages), return: query)
-  let packages = {
-    use p <- list.map(packages)
-    case p.1 {
-      None -> p.0
-      Some(version) -> p.0 <> "-" <> version
-    }
-  }
   packages
+  |> list.map(fn(p) { p.0 <> "-" <> p.1 })
   |> list.map(string.append("package:=", _))
   |> string.join("||")
   |> list.key_set(query, "filter_by", _)

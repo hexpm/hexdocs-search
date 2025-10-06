@@ -1,19 +1,19 @@
 import gleam/bool
 import gleam/list
-import gleam/option.{type Option, Some}
+import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
-import gleam/uri
+import gleam/uri.{type Uri}
 import hexdocs_search/data/model/version
 import modem
 
 pub type Route {
   Home
-  Search(q: String, packages: List(#(String, Option(String))))
+  Search(q: String, packages: List(#(String, String)))
   NotFound
 }
 
-pub fn from_uri(location: uri.Uri) -> Route {
+pub fn from_uri(location: Uri) -> Route {
   case uri.path_segments(location.path) {
     [] -> Home
     ["search"] -> search_from_uri(location)
@@ -21,7 +21,7 @@ pub fn from_uri(location: uri.Uri) -> Route {
   }
 }
 
-pub fn to_uri(route: Route) -> uri.Uri {
+pub fn to_uri(route: Route) -> Uri {
   let assert Ok(uri) = case route {
     Home -> uri.parse("/")
     NotFound -> uri.parse("/")
@@ -42,7 +42,7 @@ pub fn push(route: Route) {
 
 fn create_query(
   query: List(#(String, String)),
-  packages: List(#(String, Option(String))),
+  packages: List(#(String, String)),
 ) -> List(#(String, String)) {
   use <- bool.guard(when: list.is_empty(packages), return: query)
   let packages = list.map(packages, version.to_string)
@@ -50,10 +50,10 @@ fn create_query(
   list.append(query, [#("packages", packages)])
 }
 
-fn search_from_uri(location: uri.Uri) {
+fn search_from_uri(location: Uri) {
   case location.query {
-    option.None -> Search(q: "", packages: [])
-    option.Some(query) -> {
+    None -> Search(q: "", packages: [])
+    Some(query) -> {
       case uri.parse_query(query) {
         Error(_) -> Search(q: "", packages: [])
         Ok(query) -> {

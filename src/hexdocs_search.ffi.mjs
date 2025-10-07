@@ -16,3 +16,15 @@ function focusNode() {
   }
   node.focus()
 }
+
+export function updateColorTheme(colorMode) {
+  localStorage.setItem("theme", colorMode)
+  if (colorMode === "light") {
+    document.documentElement.classList.remove("dark")
+    document.documentElement.classList.add("light")
+  }
+  if (colorMode === "dark") {
+    document.documentElement.classList.remove("light")
+    document.documentElement.classList.add("dark")
+  }
+}

@@ -17,6 +17,7 @@ pub type Msg {
   DocumentChangedLocation(location: uri.Uri)
   DocumentRegisteredEventListener(unsubscriber: fn() -> Nil)
   DocumentRegisteredSidebarListener(unsubscriber: fn() -> Nil)
+  DocumentChangedTheme(color_theme: ColorMode)
   UserClickedGoBack
   UserToggledDarkMode
   UserToggledSidebar
@@ -46,4 +47,14 @@ pub type Msg {
 
   // Neutral element, because we need to call `stop_propagation` conditionnally.
   None
+}
+
+pub type ColorSetting {
+  User(mode: ColorMode)
+  System(mode: ColorMode)
+}
+
+pub type ColorMode {
+  Light
+  Dark
 }

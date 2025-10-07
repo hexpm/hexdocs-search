@@ -44,8 +44,11 @@ fn update(model: Model, msg: Msg) {
       document_registered_event_listener(model, unsubscriber)
     msg.DocumentRegisteredSidebarListener(unsubscriber:) ->
       document_registered_sidebar_listener(model, unsubscriber)
+    msg.DocumentChangedTheme(theme) ->
+      model.update_color_theme(model, theme)
+      |> pair.new(effect.none())
 
-    msg.UserToggledDarkMode -> #(model, effect.none())
+    msg.UserToggledDarkMode -> user_toggled_dark_mode(model)
     msg.UserToggledSidebar -> model.toggle_sidebar(model)
     msg.UserClosedSidebar -> model.close_sidebar(model)
     msg.UserClickedGoBack -> user_clicked_go_back(model)
@@ -137,6 +140,17 @@ fn document_registered_sidebar_listener(model: Model, unsubscriber: fn() -> Nil)
   let dom_click_sidebar_unsubscriber = Some(unsubscriber)
   Model(..model, dom_click_sidebar_unsubscriber:)
   |> pair.new(effect.none())
+}
+
+fn user_toggled_dark_mode(model: Model) {
+  let model = model.toggle_dark_theme(model)
+  #(model, {
+    use _ <- effect.from()
+    update_color_theme(case model.dark_mode.mode {
+      msg.Dark -> "dark"
+      msg.Light -> "light"
+    })
+  })
 }
 
 fn user_edited_search_input(model: Model, search_input: String) {
@@ -352,3 +366,6 @@ fn user_selected_package_filter_version(model: Model) {
 
 @external(javascript, "./hexdocs_search.ffi.mjs", "submitPackageInput")
 fn submit_package_input() -> Nil
+
+@external(javascript, "./hexdocs_search.ffi.mjs", "updateColorTheme")
+fn update_color_theme(color_mode: String) -> Nil

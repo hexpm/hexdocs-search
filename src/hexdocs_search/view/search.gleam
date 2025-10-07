@@ -49,9 +49,15 @@ pub fn search(model: Model) {
             ],
           ),
           hexdocs_logo(),
-          html.button([class("p-2"), attribute("onclick", "toggleDarkMode()")], [
+          html.button([class("p-2"), event.on_click(msg.UserToggledDarkMode)], [
             html.i(
-              [class("theme-icon text-xl text-slate-700 dark:text-slate-300")],
+              [
+                class("theme-icon text-xl text-slate-700 dark:text-slate-300"),
+                class(case model.dark_mode.mode {
+                  msg.Dark -> "ri-sun-line"
+                  msg.Light -> "ri-moon-line"
+                }),
+              ],
               [],
             ),
           ]),
@@ -282,6 +288,23 @@ pub fn search(model: Model) {
                 ),
               ],
               [],
+            ),
+            html.button(
+              [class("p-2"), event.on_click(msg.UserToggledDarkMode)],
+              [
+                html.i(
+                  [
+                    class(
+                      "theme-icon text-xl text-slate-700 dark:text-slate-300",
+                    ),
+                    class(case model.dark_mode.mode {
+                      msg.Dark -> "ri-sun-line"
+                      msg.Light -> "ri-moon-line"
+                    }),
+                  ],
+                  [],
+                ),
+              ],
             ),
           ]),
         ]),
@@ -516,7 +539,12 @@ fn result_card(model: Model, result: hexdocs.TypeSense) {
     case dict.get(model.search_opened_previews, result.document.id) {
       Ok(False) | Error(_) -> element.none()
       Ok(True) -> {
-        case hex.preview_link(result.document, "light") {
+        case
+          hex.preview_link(result.document, case model.dark_mode.mode {
+            msg.Dark -> "dark"
+            msg.Light -> "light"
+          })
+        {
           Error(_) -> element.none()
           Ok(link) -> {
             html.div([class("h-100 pt-4")], [

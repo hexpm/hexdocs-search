@@ -18,6 +18,8 @@
     url("/fonts/JetBrainsMono-Regular.woff") format("woff");
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-inter: Inter, sans-serif;
   --font-calibri: Calibri, sans-serif;

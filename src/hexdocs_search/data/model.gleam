@@ -28,6 +28,7 @@ pub type Model {
     /// user accepted a proposition). `dom_click_unsubscriber` stores the
     /// function to revoke the event listener.
     dom_click_unsubscriber: Option(fn() -> Nil),
+    dark_mode: msg.ColorSetting,
     /// Stores the content of the `https://hexdocs.pm/package_names.csv`.
     packages: List(String),
     /// Stores the different versions of a package.
@@ -88,10 +89,11 @@ pub type Type {
   Version
 }
 
-pub fn new() -> Model {
+pub fn new(dark_mode: msg.ColorSetting) -> Model {
   Model(
     route: route.Home,
     dom_click_unsubscriber: None,
+    dark_mode:,
     packages: [],
     packages_versions: dict.new(),
     sidebar_opened: False,
@@ -148,6 +150,24 @@ pub fn toggle_sidebar(model: Model) {
 pub fn close_sidebar(model: Model) {
   Model(..model, dom_click_sidebar_unsubscriber: None, sidebar_opened: False)
   |> pair.new(effect.none())
+}
+
+pub fn update_color_theme(model: Model, color_theme: msg.ColorMode) {
+  case model.dark_mode {
+    msg.System(_) -> Model(..model, dark_mode: msg.System(color_theme))
+    msg.User(_) -> model
+  }
+}
+
+pub fn toggle_dark_theme(model: Model) {
+  Model(..model, dark_mode: {
+    msg.User({
+      case model.dark_mode.mode {
+        msg.Dark -> msg.Light
+        msg.Light -> msg.Dark
+      }
+    })
+  })
 }
 
 pub fn update_home_search(model: Model, home_input: String) {

@@ -1,4 +1,8 @@
 export function addDocumentListener(callback) {
-  document.addEventListener("click", callback, { once: true })
-  return () => document.removeEventListener("click", callback)
+  const callback_ = () => {
+    console.log("mimuf")
+    callback()
+  }
+  document.addEventListener("click", callback_, { once: true })
+  return () => document.removeEventListener("click", callback_)
 }

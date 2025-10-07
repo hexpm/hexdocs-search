@@ -1,3 +1,5 @@
+import browser/document
+import browser/window
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/hexpm
@@ -10,6 +12,7 @@ import gleam/uri
 import hexdocs_search/data/model/autocomplete.{type Autocomplete}
 import hexdocs_search/data/model/route.{type Route}
 import hexdocs_search/data/model/version
+import hexdocs_search/data/msg
 import hexdocs_search/effects
 import hexdocs_search/services/hexdocs
 import lustre/effect
@@ -30,6 +33,9 @@ pub type Model {
     /// Stores the different versions of a package.
     /// `Dict(Package Name, hexpm.Package)`.
     packages_versions: Dict(String, hexpm.Package),
+    /// Stores the open state of the sidebar.
+    sidebar_opened: Bool,
+    dom_click_sidebar_unsubscriber: Option(fn() -> Nil),
     /// Stores the content of the search input on the home page, entered
     /// by the user.
     home_input: String,
@@ -88,6 +94,8 @@ pub fn new() -> Model {
     dom_click_unsubscriber: None,
     packages: [],
     packages_versions: dict.new(),
+    sidebar_opened: False,
+    dom_click_sidebar_unsubscriber: None,
     home_input: "",
     home_input_displayed: "",
     autocomplete: None,
@@ -109,6 +117,37 @@ pub fn new() -> Model {
 pub fn add_packages(model: Model, packages: List(String)) {
   let packages = list.filter(packages, fn(p) { p != "" })
   Model(..model, packages:)
+}
+
+pub fn toggle_sidebar(model: Model) {
+  let opened = !model.sidebar_opened
+  let model = Model(..model, sidebar_opened: opened)
+  let unsub =
+    effect.from(fn(_) {
+      let unsub = model.dom_click_sidebar_unsubscriber
+      let unsub = option.unwrap(unsub, fn() { Nil })
+      unsub()
+    })
+  case model.sidebar_opened {
+    False -> #(Model(..model, dom_click_sidebar_unsubscriber: None), unsub)
+    True -> #(
+      Model(..model, dom_click_sidebar_unsubscriber: None),
+      effect.batch([
+        unsub,
+        effect.from(fn(dispatch) {
+          use <- window.request_animation_frame()
+          document.add_listener(fn() { dispatch(msg.UserClosedSidebar) })
+          |> msg.DocumentRegisteredSidebarListener
+          |> dispatch
+        }),
+      ]),
+    )
+  }
+}
+
+pub fn close_sidebar(model: Model) {
+  Model(..model, dom_click_sidebar_unsubscriber: None, sidebar_opened: False)
+  |> pair.new(effect.none())
 }
 
 pub fn update_home_search(model: Model, home_input: String) {

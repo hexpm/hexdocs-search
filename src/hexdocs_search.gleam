@@ -42,8 +42,12 @@ fn update(model: Model, msg: Msg) {
       model.update_route(model, location)
     msg.DocumentRegisteredEventListener(unsubscriber:) ->
       document_registered_event_listener(model, unsubscriber)
+    msg.DocumentRegisteredSidebarListener(unsubscriber:) ->
+      document_registered_sidebar_listener(model, unsubscriber)
 
     msg.UserToggledDarkMode -> #(model, effect.none())
+    msg.UserToggledSidebar -> model.toggle_sidebar(model)
+    msg.UserClosedSidebar -> model.close_sidebar(model)
     msg.UserClickedGoBack -> user_clicked_go_back(model)
 
     msg.UserFocusedSearch -> user_focused_search(model)
@@ -76,6 +80,7 @@ fn update(model: Model, msg: Msg) {
     msg.UserSelectedPackageFilter -> user_selected_package_filter(model)
     msg.UserSelectedPackageFilterVersion ->
       user_selected_package_filter_version(model)
+
     msg.None -> #(model, effect.none())
   }
 }
@@ -128,6 +133,12 @@ fn document_registered_event_listener(model: Model, unsubscriber: fn() -> Nil) {
   |> pair.new(effect.none())
 }
 
+fn document_registered_sidebar_listener(model: Model, unsubscriber: fn() -> Nil) {
+  let dom_click_sidebar_unsubscriber = Some(unsubscriber)
+  Model(..model, dom_click_sidebar_unsubscriber:)
+  |> pair.new(effect.none())
+}
+
 fn user_edited_search_input(model: Model, search_input: String) {
   Model(..model, search_input:)
   |> pair.new(effect.none())
@@ -156,19 +167,23 @@ fn user_edited_packages_filter_version(model: Model, content: String) {
 fn user_submitted_search(model: Model) {
   let model = model.compute_filters_input(model)
   #(model, {
-    route.push(route.Search(
-      q: model.search_input,
-      packages: model.search_packages_filters,
-    ))
+    route.push({
+      route.Search(
+        q: model.search_input,
+        packages: model.search_packages_filters,
+      )
+    })
   })
 }
 
 fn user_submitted_search_input(model: Model) {
   #(model, {
-    route.push(route.Search(
-      q: model.search_input,
-      packages: model.search_packages_filters,
-    ))
+    route.push({
+      route.Search(
+        q: model.search_input,
+        packages: model.search_packages_filters,
+      )
+    })
   })
 }
 

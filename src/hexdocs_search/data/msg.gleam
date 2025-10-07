@@ -16,8 +16,11 @@ pub type Msg {
   // Application messages.
   DocumentChangedLocation(location: uri.Uri)
   DocumentRegisteredEventListener(unsubscriber: fn() -> Nil)
+  DocumentRegisteredSidebarListener(unsubscriber: fn() -> Nil)
   UserClickedGoBack
   UserToggledDarkMode
+  UserToggledSidebar
+  UserClosedSidebar
 
   // Home page messages.
   UserBlurredSearch

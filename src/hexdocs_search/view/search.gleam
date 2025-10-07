@@ -32,12 +32,22 @@ pub fn search(model: Model) {
           ),
         ],
         [
-          html.button([class("p-2"), attribute("onclick", "toggleSidebar()")], [
-            html.i(
-              [class("ri-menu-line text-xl text-slate-700 dark:text-slate-300")],
-              [],
-            ),
-          ]),
+          html.button(
+            [
+              class("p-2"),
+              event.on_click(msg.UserToggledSidebar),
+            ],
+            [
+              html.i(
+                [
+                  class(
+                    "ri-menu-line text-xl text-slate-700 dark:text-slate-300",
+                  ),
+                ],
+                [],
+              ),
+            ],
+          ),
           hexdocs_logo(),
           html.button([class("p-2"), attribute("onclick", "toggleDarkMode()")], [
             html.i(
@@ -52,6 +62,11 @@ pub fn search(model: Model) {
           class(
             "w-80 h-screen bg-slate-100 dark:bg-slate-800 fixed md:static z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out top-0",
           ),
+          class(case model.sidebar_opened {
+            True -> "translate-x-0"
+            False -> "-translate-x-full"
+          }),
+          event.on_click(msg.None) |> event.stop_propagation,
           attribute.id("sidebar"),
         ],
         [
@@ -68,7 +83,7 @@ pub fn search(model: Model) {
               html.button(
                 [
                   class("md:hidden p-2"),
-                  attribute("onclick", "toggleSidebar()"),
+                  event.on_click(msg.UserToggledSidebar),
                 ],
                 [
                   html.i(

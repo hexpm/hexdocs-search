@@ -334,6 +334,8 @@ fn extract_packages_filters_or_fetches(model: Model) {
   list.fold(search_packages_filters, #([], []), fn(acc, val) {
     let #(filters, packages_to_fetch) = acc
     let #(package, version) = val
+    let is_existing_package = list.contains(model.packages, package)
+    use <- bool.guard(when: !is_existing_package, return: acc)
     case version {
       Some(version) -> #([#(package, version), ..filters], packages_to_fetch)
       None -> {

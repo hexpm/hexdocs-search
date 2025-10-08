@@ -68,7 +68,9 @@ pub fn home(model: Model) {
               ),
               html.form(
                 [
-                  event.on_submit(fn(_) { msg.UserSubmittedSearch }),
+                  event.on_submit(fn(_) { msg.UserSubmittedSearch })
+                    |> event.prevent_default
+                    |> event.stop_propagation,
                   id("search"),
                   class(
                     "flex flex-col lg:flex-row items-center gap-4 mt-10 lg:mt-20",
@@ -81,7 +83,7 @@ pub fn home(model: Model) {
                       event.on_input(msg.UserEditedSearch),
                       event.on_click(msg.None) |> event.stop_propagation,
                       event.on_focus(msg.UserFocusedSearch),
-                      event.advanced("keydown", on_arrow_up_down()),
+                      event.advanced("keydown", on_arrow_up_down(model)),
                       attribute.autofocus(True),
                       attribute.type_("text"),
                       class("search-input w-full bg-white dark:bg-gray-800"),
@@ -109,6 +111,8 @@ pub fn home(model: Model) {
                   ]),
                   html.button(
                     [
+                      event.on("click", decode.failure(msg.None, ""))
+                        |> event.stop_propagation,
                       class(
                         "px-6 py-3 bg-blue-600 dark:bg-blue-600 text-gray-50 font-(family-name:--font-inter) rounded-lg hover:bg-blue-700 transition duration-200 whitespace-nowrap w-full sm:w-auto",
                       ),
@@ -226,13 +230,14 @@ pub fn home(model: Model) {
   ])
 }
 
-fn on_arrow_up_down() {
+fn on_arrow_up_down(model: Model) {
   use key <- decode.field("key", decode.string)
-  let message = case key {
-    "ArrowDown" -> Ok(msg.UserSelectedNextAutocompletePackage)
-    "ArrowUp" -> Ok(msg.UserSelectedPreviousAutocompletePackage)
+  let message = case key, model.autocomplete {
+    "ArrowDown", _ -> Ok(msg.UserSelectedNextAutocompletePackage)
+    "ArrowUp", _ -> Ok(msg.UserSelectedPreviousAutocompletePackage)
+    "Tab", Some(_) -> Ok(msg.UserSubmittedAutocomplete)
     // Error case, giving anything to please the decode failure.
-    _ -> Error(msg.None)
+    _, _ -> Error(msg.None)
   }
   case message {
     Ok(msg) ->

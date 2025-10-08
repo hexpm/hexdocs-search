@@ -28,6 +28,7 @@ pub type Msg {
   UserSelectedNextAutocompletePackage
   UserSelectedPreviousAutocompletePackage
   UserSubmittedSearch
+  UserSubmittedAutocomplete
 
   // Search page messages.
   UserDeletedPackagesFilter(#(String, String))

@@ -10,6 +10,7 @@ import gleam/string
 import grille_pain
 import grille_pain/lustre/toast
 import hexdocs_search/data/model.{type Model, Model}
+import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/model/route
 import hexdocs_search/data/msg.{type Msg}
 import hexdocs_search/effects
@@ -73,7 +74,8 @@ fn update(model: Model, msg: Msg) {
       user_selected_next_autocomplete_package(model)
     msg.UserSelectedPreviousAutocompletePackage ->
       user_selected_previous_autocomplete_package(model)
-    msg.UserSubmittedSearch -> model.compute_filters_input(model)
+    msg.UserSubmittedSearch -> user_submitted_search(model)
+    msg.UserSubmittedAutocomplete -> user_submitted_autocomplete(model)
 
     msg.UserDeletedPackagesFilter(filter) ->
       user_deleted_packages_filter(model, filter)
@@ -173,6 +175,39 @@ fn user_toggled_dark_mode(model: Model) {
       msg.Light -> "light"
     })
   })
+}
+
+fn user_submitted_search(model: Model) {
+  case model.autocomplete {
+    None -> model.compute_filters_input(model)
+    Some(#(_, autocomplete)) -> {
+      case autocomplete.current(autocomplete) {
+        None -> model.compute_filters_input(model)
+        Some(_) ->
+          model.update_home_search(model, model.home_input_displayed <> " ")
+      }
+    }
+  }
+}
+
+fn user_submitted_autocomplete(model: Model) {
+  case model.autocomplete {
+    None -> #(model, effect.none())
+    Some(#(model.Version, autocomplete)) -> {
+      case autocomplete.current(autocomplete) {
+        None -> model.compute_filters_input(model)
+        Some(_) ->
+          model.update_home_search(model, model.home_input_displayed <> " ")
+      }
+    }
+    Some(#(model.Package, autocomplete)) -> {
+      case autocomplete.current(autocomplete) {
+        None -> model.compute_filters_input(model)
+        Some(_) ->
+          model.update_home_search(model, model.home_input_displayed <> ":")
+      }
+    }
+  }
 }
 
 fn user_edited_search_input(model: Model, search_input: String) {

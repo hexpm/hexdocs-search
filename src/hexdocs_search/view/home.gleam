@@ -266,37 +266,46 @@ fn autocomplete(model: Model) {
     [
       case model.autocomplete {
         None -> element.none()
-        Some(#(_type_, autocomplete)) -> {
+        Some(#(type_, autocomplete)) -> {
           let items = autocomplete.all(autocomplete)
-          let is_empty = list.is_empty(items)
-          use <- bool.lazy_guard(when: is_empty, return: empty_autocomplete)
-          html.div([], {
-            use package <- list.map(items)
-            let is_selected = autocomplete.is_selected(autocomplete, package)
-            let selected = case is_selected {
-              True -> class("bg-stone-100 dark:bg-stone-600")
-              False -> attribute.none()
+          case list.is_empty(items), type_ {
+            True, model.Package -> empty_package_autocomplete()
+            True, model.Version -> empty_versions_autocomplete()
+            False, _ -> {
+              html.div([], {
+                use package <- list.map(items)
+                let is_selected =
+                  autocomplete.is_selected(autocomplete, package)
+                let selected = case is_selected {
+                  True -> class("bg-stone-100 dark:bg-stone-600")
+                  False -> attribute.none()
+                }
+                let on_click = on_select_package(package)
+                html.div(
+                  [
+                    class(
+                      "py-2 px-4 text-md hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer",
+                    ),
+                    selected,
+                    on_click,
+                  ],
+                  [html.text(package)],
+                )
+              })
             }
-            let on_click = on_select_package(package)
-            html.div(
-              [
-                class(
-                  "py-2 px-4 text-md hover:bg-stone-200 dark:hover:bg-stone-800 cursor-pointer",
-                ),
-                selected,
-                on_click,
-              ],
-              [html.text(package)],
-            )
-          })
+          }
         }
       },
     ],
   )
 }
 
-fn empty_autocomplete() {
-  html.text("No packages found")
+fn empty_package_autocomplete() {
+  html.text("No packages found") |> echo
+}
+
+fn empty_versions_autocomplete() {
+  html.text("No versions found")
 }
 
 fn on_select_package(package: String) {

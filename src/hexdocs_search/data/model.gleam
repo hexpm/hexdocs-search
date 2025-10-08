@@ -542,10 +542,15 @@ fn should_trigger_autocomplete_packages(model: Model, search: String) {
   |> list.last
   |> result.try(fn(search) {
     let length = string.length(search)
-    case string.starts_with(search, "#"), model.route {
-      True, _ -> Ok(string.slice(from: search, at_index: 1, length:))
-      False, route.Search(..) -> Ok(search)
-      False, _ -> Error(Nil)
+    case
+      string.starts_with(search, "#"),
+      string.contains(search, ":"),
+      model.route
+    {
+      _, True, _ -> Error(Nil)
+      True, False, _ -> Ok(string.slice(from: search, at_index: 1, length:))
+      False, _, route.Search(..) -> Ok(search)
+      False, _, _ -> Error(Nil)
     }
   })
 }

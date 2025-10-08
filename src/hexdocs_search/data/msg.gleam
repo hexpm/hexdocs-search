@@ -6,12 +6,10 @@ import hexdocs_search/loss.{type Loss}
 
 pub type Msg {
   // API messages.
-  ApiReturnedPackageVersions(
-    package: String,
-    response: Loss(Response(hexpm.Package)),
-  )
+  ApiReturnedPackageVersions(response: Loss(Response(hexpm.Package)))
   ApiReturnedPackages(Loss(Response(String)))
   ApiReturnedTypesenseSearch(Loss(Response(Dynamic)))
+  ApiReturnedPackagesVersions(packages: Loss(List(hexpm.Package)))
 
   // Application messages.
   DocumentChangedLocation(location: uri.Uri)

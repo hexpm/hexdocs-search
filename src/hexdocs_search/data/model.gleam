@@ -2,7 +2,9 @@ import browser/document
 import browser/window
 import gleam/bool
 import gleam/dict.{type Dict}
+import gleam/function
 import gleam/hexpm
+import gleam/javascript/promise
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/pair
@@ -12,10 +14,12 @@ import gleam/uri
 import hexdocs_search/data/model/autocomplete.{type Autocomplete}
 import hexdocs_search/data/model/route.{type Route}
 import hexdocs_search/data/model/version
-import hexdocs_search/data/msg
+import hexdocs_search/data/msg.{type Msg}
 import hexdocs_search/effects
+import hexdocs_search/loss
+import hexdocs_search/services/hex
 import hexdocs_search/services/hexdocs
-import lustre/effect
+import lustre/effect.{type Effect}
 
 pub type Model {
   Model(
@@ -275,14 +279,62 @@ pub fn select_autocomplete_option(model: Model, package: String) {
 /// search page, it's needed to keep the different parts of the search, while
 /// changing how they're handled in the model. That function transforms the
 /// simple text input in the advanced filters parts in the Model.
-pub fn compute_filters_input(model: Model) -> Model {
+pub fn compute_filters_input(model: Model) -> #(Model, Effect(Msg)) {
   let segments = string.split(model.home_input_displayed, on: " ")
   let search_packages_filters = list.filter_map(segments, version.match_package)
-  Model(..model, search_packages_filters:, search_input: {
+  let #(search_packages_filters, packages_to_fetch) =
+    list.fold(search_packages_filters, #([], []), fn(acc, val) {
+      let #(filters, packages_to_fetch) = acc
+      let #(package, version) = val
+      case version {
+        Some(version) -> #([#(package, version), ..filters], packages_to_fetch)
+        None -> {
+          case dict.get(model.packages_versions, package) {
+            Error(_) -> #(filters, [package, ..packages_to_fetch])
+            Ok(versionned) -> {
+              case list.first(versionned.releases) {
+                // That case is impossible, returning the neutral element.
+                Error(_) -> #(filters, packages_to_fetch)
+                Ok(release) -> {
+                  let version = release.version
+                  #([#(package, version), ..filters], packages_to_fetch)
+                }
+              }
+            }
+          }
+        }
+      }
+    })
+  let search_input =
     segments
     |> list.filter(fn(s) { version.match_package(s) |> result.is_error })
     |> string.join(with: " ")
-  })
+  case list.is_empty(packages_to_fetch) {
+    True -> {
+      #(Model(..model, search_packages_filters:, search_input:), {
+        route.push({
+          route.Search(q: search_input, packages: search_packages_filters)
+        })
+      })
+    }
+    False -> #(model, {
+      use dispatch <- effect.from()
+      use _ <- function.tap(Nil)
+      packages_to_fetch
+      |> list.map(fn(package) { hex.package_versions(package) })
+      |> promise.await_list
+      |> promise.map(fn(packages) {
+        use response <- list.try_map(packages)
+        use response <- result.try(response)
+        let is_valid = response.status == 200
+        use <- bool.guard(when: !is_valid, return: Error(loss.HttpError))
+        Ok(response.body)
+      })
+      |> promise.map(fn(packages) {
+        dispatch(msg.ApiReturnedPackagesVersions(packages))
+      })
+    })
+  }
 }
 
 pub fn set_search_results(

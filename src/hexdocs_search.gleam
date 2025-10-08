@@ -32,8 +32,10 @@ pub fn main() {
 
 fn update(model: Model, msg: Msg) {
   case msg {
-    msg.ApiReturnedPackageVersions(package, response) ->
-      api_returned_package_versions(model, package, response)
+    msg.ApiReturnedPackageVersions(response) ->
+      api_returned_package_versions(model, response)
+    msg.ApiReturnedPackagesVersions(packages) ->
+      api_returned_packages_versions(model, packages)
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
     msg.ApiReturnedTypesenseSearch(response) ->
       api_returned_typesense_search(model, response)
@@ -90,17 +92,33 @@ fn update(model: Model, msg: Msg) {
 
 fn api_returned_package_versions(
   model: Model,
-  package: String,
   response: Loss(Response(hexpm.Package)),
 ) -> #(Model, Effect(Msg)) {
   case response {
     Ok(response.Response(status: 200, body:, ..)) -> {
       Model(..model, packages_versions: {
-        dict.insert(model.packages_versions, package, body)
+        dict.insert(model.packages_versions, body.name, body)
       })
       |> model.focus_home_search
     }
     _ -> #(model, toast.error("Server error. Retry later."))
+  }
+}
+
+fn api_returned_packages_versions(
+  model: Model,
+  packages: Loss(List(hexpm.Package)),
+) {
+  case packages {
+    Error(_) -> #(model, toast.error("Server error. Retry later."))
+    Ok(packages) -> {
+      list.fold(packages, model, fn(model, package) {
+        Model(..model, packages_versions: {
+          dict.insert(model.packages_versions, package.name, package)
+        })
+      })
+      |> model.compute_filters_input
+    }
   }
 }
 
@@ -179,15 +197,7 @@ fn user_edited_packages_filter_version(model: Model, content: String) {
 }
 
 fn user_submitted_search(model: Model) {
-  let model = model.compute_filters_input(model)
-  #(model, {
-    route.push({
-      route.Search(
-        q: model.search_input,
-        packages: model.search_packages_filters,
-      )
-    })
-  })
+  model.compute_filters_input(model)
 }
 
 fn user_submitted_search_input(model: Model) {

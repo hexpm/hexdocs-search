@@ -1,15 +1,15 @@
-import gleam/option.{Some}
+import gleam/option.{type Option, None, Some}
 import gleam/regexp
 
 const version_regexp = "^#([a-zA-Z_0-9]+)(:(([0-9]+|\\.){1,5}))?"
 
-pub fn match_package(word: String) -> Result(#(String, String), Nil) {
+pub fn match_package(word: String) -> Result(#(String, Option(String)), Nil) {
   let regexp = version_search()
   case regexp.scan(regexp, word) {
     [regexp.Match(content: _, submatches:)] -> {
       case submatches {
-        [Some(package), _, Some(version), ..] -> Ok(#(package, version))
-        [Some(_package)] -> Error(Nil)
+        [Some(package), _, Some(version), ..] -> Ok(#(package, Some(version)))
+        [Some(package)] -> Ok(#(package, None))
         _ -> Error(Nil)
       }
     }

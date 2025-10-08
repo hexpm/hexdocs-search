@@ -222,34 +222,43 @@ pub fn search(model: Model) {
               ],
             ),
             html.hr([class("mt-6 border-slate-200 dark:border-slate-700")]),
-            element.fragment({
-              use filter <- list.map(model.search_packages_filters)
-              let #(package, version) = filter
-              html.div([class("flex justify-between items-center mt-4")], [
-                html.div(
-                  [class("inline-flex flex-col justify-start items-start")],
-                  [
+            case list.is_empty(model.search_packages_filters) {
+              True -> {
+                html.div([], [
+                  html.text("No package selected, searching all packages"),
+                ])
+              }
+              False -> {
+                element.fragment({
+                  use filter <- list.map(model.search_packages_filters)
+                  let #(package, version) = filter
+                  html.div([class("flex justify-between items-center mt-4")], [
                     html.div(
+                      [class("inline-flex flex-col justify-start items-start")],
                       [
-                        class(
-                          "self-stretch justify-start text-gray-950 dark:text-slate-50 text-lg font-semibold leading-none",
+                        html.div(
+                          [
+                            class(
+                              "self-stretch justify-start text-gray-950 dark:text-slate-50 text-lg font-semibold leading-none",
+                            ),
+                          ],
+                          [html.text(package)],
+                        ),
+                        html.div(
+                          [
+                            class(
+                              "self-stretch justify-start text-slate-700 dark:text-slate-400 text-sm font-normal leading-none",
+                            ),
+                          ],
+                          [html.text(version)],
                         ),
                       ],
-                      [html.text(package)],
                     ),
-                    html.div(
-                      [
-                        class(
-                          "self-stretch justify-start text-slate-700 dark:text-slate-400 text-sm font-normal leading-none",
-                        ),
-                      ],
-                      [html.text(version)],
-                    ),
-                  ],
-                ),
-                trash_button(filter),
-              ])
-            }),
+                    trash_button(filter),
+                  ])
+                })
+              }
+            },
           ]),
         ],
       ),

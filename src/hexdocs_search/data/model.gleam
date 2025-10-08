@@ -425,7 +425,11 @@ pub fn autocomplete_versions(model: Model, search: String) {
     Error(_) -> #(model, effect.none())
     Ok(#(package, version)) -> {
       case dict.get(model.packages_versions, package) {
-        Error(_) -> #(model, effects.package_versions(package))
+        Error(_) ->
+          case list.contains(model.packages, package) {
+            True -> #(model, effects.package_versions(package))
+            False -> #(model, effect.none())
+          }
         Ok(package) -> {
           let versions = list.map(package.releases, fn(r) { r.version })
           let autocomplete = autocomplete.init(versions, version)

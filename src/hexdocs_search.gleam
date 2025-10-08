@@ -197,14 +197,14 @@ fn user_submitted_autocomplete(model: Model) {
     None -> #(model, effect.none())
     Some(#(model.Version, autocomplete)) -> {
       case autocomplete.current(autocomplete) {
-        None -> model.compute_filters_input(model)
+        None -> #(model, effect.none())
         Some(_) ->
           model.update_home_search(model, model.home_input_displayed <> " ")
       }
     }
     Some(#(model.Package, autocomplete)) -> {
       case autocomplete.current(autocomplete) {
-        None -> model.compute_filters_input(model)
+        None -> #(model, effect.none())
         Some(_) ->
           model.update_home_search(model, model.home_input_displayed <> ":")
       }

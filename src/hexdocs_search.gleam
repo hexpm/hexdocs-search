@@ -9,6 +9,7 @@ import gleam/result
 import gleam/string
 import grille_pain
 import grille_pain/lustre/toast
+import hexdocs_search/components/iframe
 import hexdocs_search/data/model.{type Model, Model}
 import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/model/route
@@ -26,6 +27,7 @@ import modem
 
 pub fn main() {
   let flags = Nil
+  let assert Ok(_) = iframe.register()
   let assert Ok(_) = grille_pain.simple()
   lustre.application(setup.init, update, view)
   |> lustre.start("#app", flags)

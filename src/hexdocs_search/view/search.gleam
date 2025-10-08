@@ -4,6 +4,7 @@ import gleam/dynamic/decode
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
+import hexdocs_search/components/iframe
 import hexdocs_search/data/model.{type Model}
 import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/msg
@@ -549,9 +550,10 @@ fn result_card(model: Model, result: hexdocs.TypeSense) {
           Error(_) -> element.none()
           Ok(link) -> {
             html.div([class("h-100 pt-4")], [
-              html.iframe([
-                class("size-full rounded-lg shadow-sm"),
-                attribute.src(link),
+              iframe.iframe([
+                class("rounded-lg shadow-sm"),
+                iframe.to(link),
+                iframe.title(result.document.package),
               ]),
             ])
           }

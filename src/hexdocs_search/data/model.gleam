@@ -120,35 +120,46 @@ pub fn new(dark_mode: msg.ColorSetting) -> Model {
 /// Add packages in the `Model`, allowing them to be easily parsed, used in
 /// autocomplete, etc. The `Model` acts as a cache for the packages list,
 /// fetched at every application startup.
-pub fn add_packages(model: Model, packages: List(String)) {
+pub fn add_packages(model: Model, packages: List(String)) -> Model {
   let packages = list.filter(packages, fn(p) { p != "" })
   Model(..model, packages:)
 }
 
+pub fn add_packages_versions(
+  model: Model,
+  packages: List(hexpm.Package),
+) -> Model {
+  use model, package <- list.fold(packages, model)
+  Model(..model, packages_versions: {
+    dict.insert(model.packages_versions, package.name, package)
+  })
+}
+
 pub fn toggle_sidebar(model: Model) {
-  let opened = !model.sidebar_opened
-  let model = Model(..model, sidebar_opened: opened)
-  let unsub =
-    effect.from(fn(_) {
-      let unsub = model.dom_click_sidebar_unsubscriber
-      let unsub = option.unwrap(unsub, fn() { Nil })
-      unsub()
-    })
+  let model = Model(..model, sidebar_opened: !model.sidebar_opened)
+  let unsub = unsubscribe_sidebar_dom_click(model)
   case model.sidebar_opened {
     False -> #(Model(..model, dom_click_sidebar_unsubscriber: None), unsub)
     True -> #(
       Model(..model, dom_click_sidebar_unsubscriber: None),
-      effect.batch([
-        unsub,
-        effect.from(fn(dispatch) {
-          use <- window.request_animation_frame()
-          document.add_listener(fn() { dispatch(msg.UserClosedSidebar) })
-          |> msg.DocumentRegisteredSidebarListener
-          |> dispatch
-        }),
-      ]),
+      effect.batch([unsub, subscribe_sidebar_dom_click()]),
     )
   }
+}
+
+fn unsubscribe_sidebar_dom_click(model: Model) {
+  use _ <- effect.from()
+  let unsub = model.dom_click_sidebar_unsubscriber
+  let unsub = option.unwrap(unsub, fn() { Nil })
+  unsub()
+}
+
+fn subscribe_sidebar_dom_click() {
+  use dispatch <- effect.from()
+  use <- window.request_animation_frame()
+  document.add_listener(fn() { dispatch(msg.UserClosedSidebar) })
+  |> msg.DocumentRegisteredSidebarListener
+  |> dispatch
 }
 
 pub fn close_sidebar(model: Model) {
@@ -156,6 +167,9 @@ pub fn close_sidebar(model: Model) {
   |> pair.new(effect.none())
 }
 
+/// Updates the color theme according to `(prefers-color-scheme)` of the
+/// browser. If user setup setting by hand, the change _will not_ have any
+/// effect.
 pub fn update_color_theme(model: Model, color_theme: msg.ColorMode) {
   case model.dark_mode {
     msg.System(_) -> Model(..model, dark_mode: msg.System(color_theme))
@@ -163,6 +177,10 @@ pub fn update_color_theme(model: Model, color_theme: msg.ColorMode) {
   }
 }
 
+/// Toggle the dark theme as asked by the user. By design, when the user
+/// overrides the system setting, the theme will now only be controlled by the
+/// user, and `(prefers-color-scheme: dark)` will have no effect on the color
+/// mode of the application.
 pub fn toggle_dark_theme(model: Model) {
   Model(..model, dark_mode: {
     msg.User({
@@ -181,16 +199,12 @@ pub fn update_home_search(model: Model, home_input: String) {
 }
 
 pub fn focus_home_search(model: Model) {
-  Model(
-    ..model,
-    autocomplete_search_focused: case
-      model.autocomplete_search_focused,
-      model.route
-    {
+  Model(..model, autocomplete_search_focused: {
+    case model.autocomplete_search_focused, model.route {
       AutocompleteClosed, route.Home -> AutocompleteOnHome
       state, _ -> state
-    },
-  )
+    }
+  })
   |> autocomplete_packages(model.home_input)
   |> autocomplete_versions(model.home_input)
 }
@@ -280,41 +294,12 @@ pub fn select_autocomplete_option(model: Model, package: String) {
 /// changing how they're handled in the model. That function transforms the
 /// simple text input in the advanced filters parts in the Model.
 pub fn compute_filters_input(model: Model) -> #(Model, Effect(Msg)) {
-  let segments = string.split(model.home_input_displayed, on: " ")
-  let search_packages_filters = list.filter_map(segments, version.match_package)
-  let #(search_packages_filters, packages_to_fetch) =
-    list.fold(search_packages_filters, #([], []), fn(acc, val) {
-      let #(filters, packages_to_fetch) = acc
-      let #(package, version) = val
-      case version {
-        Some(version) -> #([#(package, version), ..filters], packages_to_fetch)
-        None -> {
-          case dict.get(model.packages_versions, package) {
-            Error(_) -> #(filters, [package, ..packages_to_fetch])
-            Ok(versionned) -> {
-              case list.first(versionned.releases) {
-                // That case is impossible, returning the neutral element.
-                Error(_) -> #(filters, packages_to_fetch)
-                Ok(release) -> {
-                  let version = release.version
-                  #([#(package, version), ..filters], packages_to_fetch)
-                }
-              }
-            }
-          }
-        }
-      }
-    })
-  let search_input =
-    segments
-    |> list.filter(fn(s) { version.match_package(s) |> result.is_error })
-    |> string.join(with: " ")
+  let #(filters, packages_to_fetch) = extract_packages_filters_or_fetches(model)
+  let search_input = keep_search_input_non_packages_text(model)
   case list.is_empty(packages_to_fetch) {
     True -> {
-      #(Model(..model, search_packages_filters:, search_input:), {
-        route.push({
-          route.Search(q: search_input, packages: search_packages_filters)
-        })
+      #(Model(..model, search_packages_filters: filters, search_input:), {
+        route.push(route.Search(q: search_input, packages: filters))
       })
     }
     False -> #(model, {
@@ -334,6 +319,65 @@ pub fn compute_filters_input(model: Model) -> #(Model, Effect(Msg)) {
         dispatch(msg.ApiReturnedPackagesVersions(packages))
       })
     })
+  }
+}
+
+/// Typical home search input will be something like `foo #phoenix #ecto:1.0.0`.
+/// `extract_packages_filters_or_fetches` will extract the `#ecto:1.0.0` part
+/// as a filter, and will return a side-effect to fetch `phoenix`, in order to
+/// always query the latest version. When all packages have been fetched and are
+/// stored in the model, `extract_packages_filters_or_fetches` will return the
+/// correct model and will reroute to the search page.
+fn extract_packages_filters_or_fetches(model: Model) {
+  let segments = string.split(model.home_input_displayed, on: " ")
+  let search_packages_filters = list.filter_map(segments, version.match_package)
+  list.fold(search_packages_filters, #([], []), fn(acc, val) {
+    let #(filters, packages_to_fetch) = acc
+    let #(package, version) = val
+    case version {
+      Some(version) -> #([#(package, version), ..filters], packages_to_fetch)
+      None -> {
+        case dict.get(model.packages_versions, package) {
+          Error(_) -> #(filters, [package, ..packages_to_fetch])
+          Ok(versionned) -> {
+            case list.first(versionned.releases) {
+              // That case is impossible, returning the neutral element.
+              Error(_) -> #(filters, packages_to_fetch)
+              Ok(release) -> {
+                let version = release.version
+                #([#(package, version), ..filters], packages_to_fetch)
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
+/// Typical home search input will be something like `foo #phoenix #ecto:1.0.0`.
+/// `keep_search_input_non_packages_text` keeps only the `foo` part of the
+/// search input.
+fn keep_search_input_non_packages_text(model: Model) -> String {
+  let segments = string.split(model.home_input_displayed, on: " ")
+  segments
+  |> list.filter(fn(s) { version.match_package(s) |> result.is_error })
+  |> string.join(with: " ")
+}
+
+/// When typing to select a new package filter on the search page, if the
+/// package is incomplete when submitting, the autocomplete will automatically
+/// takes the first package in the list.
+pub fn get_selected_package_filter_name(model: Model) {
+  let is_valid =
+    list.contains(model.packages, model.search_packages_filter_input_displayed)
+  case is_valid, model.autocomplete {
+    True, _ -> Ok(model.search_packages_filter_input_displayed)
+    False, None -> Error(Nil)
+    False, Some(#(_, autocomplete)) -> {
+      autocomplete.all(autocomplete)
+      |> list.first
+    }
   }
 }
 
@@ -444,6 +488,9 @@ fn update_displayed(model: Model, autocomplete: #(Type, Autocomplete)) {
   }
 }
 
+/// When using the home search input, only the last word in the input should be
+/// replaced when using the autocomplete. That helper helps by managing directly
+/// the replacement.
 fn replace_last_word(content: String, word: String, type_: Type) {
   case type_ {
     Package -> {

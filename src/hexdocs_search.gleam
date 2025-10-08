@@ -2,7 +2,6 @@ import gleam/dict
 import gleam/dynamic/decode
 import gleam/function
 import gleam/hexpm
-import gleam/http/response.{type Response}
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/pair
@@ -11,23 +10,32 @@ import gleam/string
 import grille_pain
 import grille_pain/lustre/toast
 import hexdocs_search/data/model.{type Model, Model}
-import hexdocs_search/data/model/autocomplete
 import hexdocs_search/data/model/route
 import hexdocs_search/data/msg.{type Msg}
 import hexdocs_search/effects
 import hexdocs_search/loss.{type Loss}
 import hexdocs_search/services/hexdocs
 import hexdocs_search/setup
-import hexdocs_search/view
+import hexdocs_search/view/home
+import hexdocs_search/view/search
 import lustre
 import lustre/effect.{type Effect}
+import lustre/element/html
 import modem
 
 pub fn main() {
   let flags = Nil
   let assert Ok(_) = grille_pain.simple()
-  lustre.application(setup.init, update, view.view)
+  lustre.application(setup.init, update, view)
   |> lustre.start("#app", flags)
+}
+
+pub fn view(model: Model) {
+  case model.route {
+    route.Home -> home.home(model)
+    route.Search(..) -> search.search(model)
+    route.NotFound -> html.div([], [])
+  }
 }
 
 fn update(model: Model, msg: Msg) {
@@ -65,7 +73,7 @@ fn update(model: Model, msg: Msg) {
       user_selected_next_autocomplete_package(model)
     msg.UserSelectedPreviousAutocompletePackage ->
       user_selected_previous_autocomplete_package(model)
-    msg.UserSubmittedSearch -> user_submitted_search(model)
+    msg.UserSubmittedSearch -> model.compute_filters_input(model)
 
     msg.UserDeletedPackagesFilter(filter) ->
       user_deleted_packages_filter(model, filter)
@@ -92,54 +100,50 @@ fn update(model: Model, msg: Msg) {
 
 fn api_returned_package_versions(
   model: Model,
-  response: Loss(Response(hexpm.Package)),
+  response: Loss(hexpm.Package),
 ) -> #(Model, Effect(Msg)) {
   case response {
-    Ok(response.Response(status: 200, body:, ..)) -> {
-      Model(..model, packages_versions: {
-        dict.insert(model.packages_versions, body.name, body)
-      })
+    Error(_) -> #(model, toast.error("Server error. Retry later."))
+    Ok(package) -> {
+      model
+      |> model.add_packages_versions([package])
       |> model.focus_home_search
     }
-    _ -> #(model, toast.error("Server error. Retry later."))
   }
 }
 
 fn api_returned_packages_versions(
   model: Model,
   packages: Loss(List(hexpm.Package)),
-) {
+) -> #(Model, Effect(Msg)) {
   case packages {
     Error(_) -> #(model, toast.error("Server error. Retry later."))
     Ok(packages) -> {
-      list.fold(packages, model, fn(model, package) {
-        Model(..model, packages_versions: {
-          dict.insert(model.packages_versions, package.name, package)
-        })
-      })
+      model
+      |> model.add_packages_versions(packages)
       |> model.compute_filters_input
     }
   }
 }
 
-fn api_returned_packages(model: Model, response: Loss(Response(String))) {
+fn api_returned_packages(
+  model: Model,
+  response: Loss(String),
+) -> #(Model, Effect(msg)) {
   case response {
-    Ok(response.Response(status: 200, body:, ..)) ->
-      body
+    Error(_) -> #(model, toast.error("Server error. Retry later."))
+    Ok(packages) ->
+      packages
       |> string.split(on: "\n")
       |> model.add_packages(model, _)
       |> pair.new(effect.none())
-    _ -> #(model, toast.error("Server error. Retry later."))
   }
 }
 
-fn api_returned_typesense_search(
-  model: Model,
-  response: Loss(Response(decode.Dynamic)),
-) {
+fn api_returned_typesense_search(model: Model, response: Loss(decode.Dynamic)) {
   response
-  |> result.try(fn(response) {
-    response.body
+  |> result.try(fn(search_result) {
+    search_result
     |> decode.run(hexdocs.typesense_decoder())
     |> result.map_error(loss.DecodeError)
   })
@@ -194,10 +198,6 @@ fn user_edited_packages_filter_version(model: Model, content: String) {
     search_packages_filter_version_input_displayed: content,
   )
   |> pair.new(effect.none())
-}
-
-fn user_submitted_search(model: Model) {
-  model.compute_filters_input(model)
 }
 
 fn user_submitted_search_input(model: Model) {
@@ -314,33 +314,18 @@ fn user_toggled_preview(model: Model, id: String) {
 }
 
 fn user_selected_package_filter(model: Model) {
-  let is_valid =
-    list.contains(model.packages, model.search_packages_filter_input_displayed)
-  let package = case is_valid {
-    True -> Ok(model.search_packages_filter_input_displayed)
-    False ->
-      case model.autocomplete {
-        None -> Error(Nil)
-        Some(#(_, autocomplete)) ->
-          autocomplete.all(autocomplete)
-          |> list.first
-      }
-  }
-  case package {
+  case model.get_selected_package_filter_name(model) {
     Error(_) -> #(model, effect.none())
     Ok(package) -> {
-      let model =
-        Model(
-          ..model,
-          search_packages_filter_input_displayed: package,
-          search_packages_filter_input: package,
-        )
-      let #(model, blur_effect) = model.blur_search(model)
-      #(model, {
-        effect.batch([
-          blur_effect,
-          effect.from(fn(_) { submit_package_input() }),
-        ])
+      Model(
+        ..model,
+        search_packages_filter_input_displayed: package,
+        search_packages_filter_input: package,
+      )
+      |> model.blur_search
+      |> pair.map_second(fn(blur_effect) {
+        let submit_package_input = effect.from(fn(_) { submit_package_input() })
+        effect.batch([blur_effect, submit_package_input])
       })
     }
   }

@@ -267,7 +267,8 @@ fn autocomplete(model: Model) {
           use <- bool.lazy_guard(when: is_empty, return: empty_autocomplete)
           html.div([], {
             use package <- list.map(items)
-            let selected = case autocomplete.selected(autocomplete, package) {
+            let is_selected = autocomplete.is_selected(autocomplete, package)
+            let selected = case is_selected {
               True -> class("bg-stone-100 dark:bg-stone-600")
               False -> attribute.none()
             }

@@ -1,14 +1,13 @@
 import gleam/dynamic.{type Dynamic}
 import gleam/hexpm
-import gleam/http/response.{type Response}
 import gleam/uri
 import hexdocs_search/loss.{type Loss}
 
 pub type Msg {
   // API messages.
-  ApiReturnedPackageVersions(response: Loss(Response(hexpm.Package)))
-  ApiReturnedPackages(Loss(Response(String)))
-  ApiReturnedTypesenseSearch(Loss(Response(Dynamic)))
+  ApiReturnedPackageVersions(response: Loss(hexpm.Package))
+  ApiReturnedPackages(Loss(String))
+  ApiReturnedTypesenseSearch(Loss(Dynamic))
   ApiReturnedPackagesVersions(packages: Loss(List(hexpm.Package)))
 
   // Application messages.

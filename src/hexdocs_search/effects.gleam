@@ -1,7 +1,9 @@
 import browser/document
 import gleam/function
+import gleam/http/response.{type Response}
 import gleam/javascript/promise
 import hexdocs_search/data/msg
+import hexdocs_search/loss.{type Loss}
 import hexdocs_search/services/hex
 import hexdocs_search/services/hexdocs
 import lustre/effect
@@ -10,6 +12,7 @@ pub fn packages() {
   use dispatch <- effect.from()
   use _ <- function.tap(Nil)
   use response <- promise.map(hexdocs.packages())
+  let response = response_to_loss(response)
   dispatch(msg.ApiReturnedPackages(response))
 }
 
@@ -17,6 +20,7 @@ pub fn package_versions(package: String) {
   use dispatch <- effect.from()
   use _ <- function.tap(Nil)
   use response <- promise.map(hex.package_versions(package))
+  let response = response_to_loss(response)
   dispatch(msg.ApiReturnedPackageVersions(response:))
 }
 
@@ -31,5 +35,14 @@ pub fn typesense_search(query: String, packages: List(#(String, String))) {
   use dispatch <- effect.from()
   use _ <- function.tap(Nil)
   use response <- promise.map(hexdocs.typesense_search(query, packages, 1))
+  let response = response_to_loss(response)
   dispatch(msg.ApiReturnedTypesenseSearch(response))
+}
+
+fn response_to_loss(response: Loss(Response(a))) -> Loss(a) {
+  case response {
+    Error(error) -> Error(error)
+    Ok(response) if response.status == 200 -> Ok(response.body)
+    Ok(_response) -> Error(loss.HttpError)
+  }
 }

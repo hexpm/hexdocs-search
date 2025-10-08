@@ -28,7 +28,7 @@ pub fn current(autocomplete: Autocomplete) -> Option(String) {
   autocomplete.current
 }
 
-pub fn selected(autocomplete: Autocomplete, element: String) -> Bool {
+pub fn is_selected(autocomplete: Autocomplete, element: String) -> Bool {
   autocomplete.current == Some(element)
 }
 

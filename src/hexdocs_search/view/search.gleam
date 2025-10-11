@@ -203,8 +203,9 @@ pub fn search(model: Model) {
                   ),
                   html.button(
                     [
+                      event.on_click(msg.UserClickedShare),
                       class(
-                        "w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
+                        "w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center cursor-pointer",
                       ),
                     ],
                     [
@@ -224,7 +225,7 @@ pub fn search(model: Model) {
             html.hr([class("mt-6 border-slate-200 dark:border-slate-700")]),
             case list.is_empty(model.search_packages_filters) {
               True -> {
-                html.div([], [
+                html.div([class("text-slate-950 dark:text-slate-50 pt-4")], [
                   html.text("No package selected, searching all packages"),
                 ])
               }
@@ -291,14 +292,14 @@ pub fn search(model: Model) {
                 [],
               ),
             ]),
-            html.i(
-              [
-                class(
-                  "ri-settings-4-line text-xl text-slate-700 dark:text-slate-300",
-                ),
-              ],
-              [],
-            ),
+            // html.i(
+            //   [
+            //     class(
+            //       "ri-settings-4-line text-xl text-slate-700 dark:text-slate-300",
+            //     ),
+            //   ],
+            //   [],
+            // ),
             html.button(
               [class("p-2"), event.on_click(msg.UserToggledDarkMode)],
               [

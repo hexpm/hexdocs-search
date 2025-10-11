@@ -301,7 +301,7 @@ fn autocomplete(model: Model) {
 }
 
 fn empty_package_autocomplete() {
-  html.text("No packages found") |> echo
+  html.text("No packages found")
 }
 
 fn empty_versions_autocomplete() {

@@ -97,6 +97,12 @@ fn update(model: Model, msg: Msg) {
     msg.UserSelectedPackageFilter -> user_selected_package_filter(model)
     msg.UserSelectedPackageFilterVersion ->
       user_selected_package_filter_version(model)
+    msg.UserClickedShare -> #(model, {
+      effect.batch([
+        effect.from(fn(_) { copy_url() }),
+        toast.info("The current URL has been copied in your clipboard."),
+      ])
+    })
 
     msg.None -> #(model, effect.none())
   }
@@ -401,3 +407,6 @@ fn submit_package_input() -> Nil
 
 @external(javascript, "./hexdocs_search.ffi.mjs", "updateColorTheme")
 fn update_color_theme(color_mode: String) -> Nil
+
+@external(javascript, "./hexdocs_search.ffi.mjs", "copyUrl")
+fn copy_url() -> Nil

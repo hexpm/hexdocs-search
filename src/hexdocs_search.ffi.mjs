@@ -28,3 +28,8 @@ export function updateColorTheme(colorMode) {
     document.documentElement.classList.add("dark")
   }
 }
+
+export function copyUrl() {
+  const href = window.location.href
+  return navigator.clipboard.writeText(href)
+}

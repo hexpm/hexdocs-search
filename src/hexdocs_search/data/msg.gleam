@@ -42,6 +42,7 @@ pub type Msg {
   UserSubmittedPackagesFilter
   UserSubmittedSearchInput
   UserToggledPreview(id: String)
+  UserClickedShare
 
   // Neutral element, because we need to call `stop_propagation` conditionnally.
   None

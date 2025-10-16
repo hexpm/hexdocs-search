@@ -8,6 +8,7 @@ import gleam/option
 import gleam/result
 import gleam/string
 import gleam/uri
+import hexdocs/config
 import hexdocs/endpoints
 import hexdocs/loss
 import hexdocs/services/hexdocs
@@ -29,7 +30,7 @@ pub fn go_to_link(document: hexdocs.Document) {
   case string.split(document.package, on: "-") {
     [name, version, ..rest] -> {
       let version = string.join([version, ..rest], with: "-")
-      ["https://hexdocs.pm", name, version, document.ref]
+      [config.hexdocs_url(), name, version, document.ref]
       |> string.join(with: "/")
       |> Ok
     }
@@ -39,7 +40,7 @@ pub fn go_to_link(document: hexdocs.Document) {
 
 pub fn preview_link(document: hexdocs.Document, theme: String) {
   let assert [name, vsn] = string.split(document.package, on: "-")
-  ["https://hexdocs.pm", name, vsn, document.ref]
+  [config.hexdocs_url(), name, vsn, document.ref]
   |> string.join(with: "/")
   |> uri.parse
   |> result.map(fn(u) {

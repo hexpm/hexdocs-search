@@ -10,7 +10,6 @@ import gleam/result
 import gleam/string
 import gleam/uri
 import hexdocs/endpoints
-import hexdocs/environment
 import hexdocs/loss
 
 pub type TypeSense {
@@ -38,15 +37,11 @@ pub type Highlight {
 }
 
 pub fn packages() {
-  case environment.read() {
-    environment.Development | environment.Staging | environment.Production -> {
-      let endpoint = endpoints.packages()
-      let assert Ok(request) = request.from_uri(endpoint)
-      fetch.send(request)
-      |> promise.try_await(fetch.read_text_body)
-      |> promise.map(result.map_error(_, loss.FetchError))
-    }
-  }
+  let endpoint = endpoints.packages()
+  let assert Ok(request) = request.from_uri(endpoint)
+  fetch.send(request)
+  |> promise.try_await(fetch.read_text_body)
+  |> promise.map(result.map_error(_, loss.FetchError))
 }
 
 pub fn typesense_search(

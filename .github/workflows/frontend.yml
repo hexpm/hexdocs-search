@@ -21,7 +21,9 @@ jobs:
         run: gleam deps download
 
       - name: Generate config
-        run: cd config && gleam run -m config
+        run: |
+          cd config && gleam run -m config
+          cd .. && gleam format src/hexdocs/config.gleam
 
       - name: Run tests
         run: gleam test

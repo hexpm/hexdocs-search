@@ -15,17 +15,15 @@ pub fn main() {
   io.println("")
 
   let search_url =
-    envoy.get("HEXDOCS_SEARCH_URL")
-    |> result.unwrap("https://search.hexdocs.pm")
+    envoy.get("SEARCH_URL") |> result.unwrap("https://search.hexdocs.pm")
   let hexdocs_url =
-    envoy.get("HEXDOCS_HEXDOCS_URL") |> result.unwrap("https://hexdocs.pm")
-  let hexpm_url =
-    envoy.get("HEXDOCS_HEXPM_URL") |> result.unwrap("https://hex.pm")
+    envoy.get("HEXDOCS_URL") |> result.unwrap("https://hexdocs.pm")
+  let hexpm_url = envoy.get("HEXPM_URL") |> result.unwrap("https://hex.pm")
 
   io.println("Configuration:")
-  print_config("HEXDOCS_SEARCH_URL", search_url)
-  print_config("HEXDOCS_HEXDOCS_URL", hexdocs_url)
-  print_config("HEXDOCS_HEXPM_URL", hexpm_url)
+  print_config("SEARCH_URL", search_url)
+  print_config("HEXDOCS_URL", hexdocs_url)
+  print_config("HEXPM_URL", hexpm_url)
   io.println("")
 
   let content = generate_module(search_url, hexdocs_url, hexpm_url)

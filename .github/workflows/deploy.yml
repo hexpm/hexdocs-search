@@ -1,0 +1,63 @@
+name: Deploy to GCS
+
+on:
+  push:
+    branches:
+      - staging
+      - prod
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-24.04
+    environment: ${{ github.ref_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install OTP and Gleam
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: 27.2
+          gleam-version: 1.12.0
+          rebar3-version: 3
+
+      - name: Install dependencies
+        run: gleam deps download
+
+      - name: Generate config
+        env:
+          SEARCH_URL: ${{ vars.SEARCH_URL }}
+          HEXDOCS_URL: ${{ vars.HEXDOCS_URL }}
+          HEXPM_URL: ${{ vars.HEXPM_URL }}
+        run: gleam run -m build/config
+
+      - name: Build application
+        run: gleam run -m lustre/dev build
+
+      - name: Copy 404.html to dist
+        run: cp assets/404.html dist/404.html
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Upload to GCS
+        uses: google-github-actions/upload-cloud-storage@v2
+        with:
+          path: dist
+          destination: ${{ vars.GCS_BUCKET }}
+          parent: false
+          headers: |-
+            cache-control: public, max-age=86400
+            surrogate-key: static
+          predefinedAcl: publicRead
+          process_gcloudignore: false
+
+      - name: Purge Fastly cache
+        run: |
+          curl -X POST "https://api.fastly.com/service/${{ secrets.FASTLY_SERVICE_ID }}/purge/static" \
+            -H "Fastly-Key: ${{ secrets.FASTLY_API_TOKEN }}" \
+            -H "Accept: application/json"

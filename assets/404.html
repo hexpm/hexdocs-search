@@ -1,125 +1,131 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page not found - HexDocs</title>
-    <style>
-html {
-  font-size: 100%;
-  -ms-text-size-adjust: 100%;
-  -webkit-text-size-adjust: 100%;
-  font-family: sans-serif;
-}
 
-body {
-  margin: 0;
-  line-height: 1.7em;
-  color: #7f8c8d;
-  font-size: 13px;
-}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found - HexDocs</title>
+  <style>
+    html {
+      font-size: 100%;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      font-family: sans-serif;
+    }
 
-* {
-  box-sizing: border-box;
-}
+    body {
+      margin: 0;
+      line-height: 1.7em;
+      color: #7f8c8d;
+      font-size: 13px;
+    }
 
-h1 {
-  font-size: 2em;
-  margin: .67em 0;
-  color: #333;
-  text-transform: uppercase;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-p {
-  margin: 1em 0;
-}
+    h1 {
+      font-size: 2em;
+      margin: .67em 0;
+      color: #333;
+      text-transform: uppercase;
+    }
 
-small {
-  text-transform: uppercase;
-}
+    p {
+      margin: 1em 0;
+    }
 
-a:focus {
-  outline: thin dotted;
-}
+    small {
+      text-transform: uppercase;
+    }
 
-a:link,
-a:active,
-a:visited {
-  color: #000;
-  text-decoration: underline;
-}
+    a:focus {
+      outline: thin dotted;
+    }
 
-a:hover {
-  color: #000;
-  text-decoration: none;
-  outline: 0;
-}
+    a:link,
+    a:active,
+    a:visited {
+      color: #000;
+      text-decoration: underline;
+    }
 
-.splash-container {
-  background: #fff;
-  z-index: 1;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-}
+    a:hover {
+      color: #000;
+      text-decoration: none;
+      outline: 0;
+    }
 
-.splash {
-  width: 80%;
-  height: 50%;
-  margin: auto;
-  position: absolute;
-  top: 100px;
-  left: 0;
-  right: 0;
-  text-align: center;
-}
+    .splash-container {
+      background: #fff;
+      z-index: 1;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
 
-.splash-subhead {
-  color: black;
-  letter-spacing: 0.05em;
-  opacity: 0.8;
-  text-transform: uppercase;
-}
+    .splash {
+      width: 80%;
+      height: 50%;
+      margin: auto;
+      position: absolute;
+      top: 100px;
+      left: 0;
+      right: 0;
+      text-align: center;
+    }
 
-@media (min-width:48em) {
-  body {
-    font-size: 16px;
-  }
+    .splash-subhead {
+      color: black;
+      letter-spacing: 0.05em;
+      opacity: 0.8;
+      text-transform: uppercase;
+    }
 
-  .splash {
-    width: 50%;
-    height: 50%;
-  }
-}
-    </style>
-    <link rel="shortcut icon" href="/favicon.png">
-  </head>
+    @media (min-width:48em) {
+      body {
+        font-size: 16px;
+      }
 
-  <body>
-    <div class="splash-container">
-      <div class="splash">
-        <h1>Page not found</h1>
-        <p>
-          Is something wrong with the package documentation? Open an issue on the project the documentation belongs to. Most packages link to their repository from their <a href="https://hex.pm/packages">hex.pm page</a>.
-        </p>
+      .splash {
+        width: 50%;
+        height: 50%;
+      }
+    }
+  </style>
+  <link rel="shortcut icon" href="/favicon.png">
+</head>
 
-        <p>
-          If you are seeing this as the publisher of a package you may want to verify that you configured <a href="https://github.com/elixir-lang/ex_doc"><code>ex_doc</code></a> correctly for your project or if you believe the issue is with <code>ex_doc</code> open an issue there.
-        </p>
+<body>
+  <div class="splash-container">
+    <div class="splash">
+      <h1>Page not found</h1>
+      <p>
+        Is something wrong with the package documentation? Open an issue on the project the documentation belongs to.
+        Most packages link to their repository from their <a href="https://hex.pm/packages">hex.pm page</a>.
+      </p>
 
-        <p class="splash-subhead">
-          <a href="https://hex.pm/">Go back to Hex</a>
-        </p>
+      <p>
+        If you are seeing this as the publisher of a package you may want to verify that you configured <a
+          href="https://github.com/elixir-lang/ex_doc"><code>ex_doc</code></a> correctly for your project or if you
+        believe the issue is with <code>ex_doc</code> open an issue there.
+      </p>
 
-        <p>
-          <small>
-            Is something wrong? Let us know by <a href="https://github.com/hexpm/hex_web/issues">opening an issue</a> or <a href="mailto:support@hex.pm">emailing support</a>.
-          </small>
-        </p>
+      <p class="splash-subhead">
+        <a href="https://hex.pm/">Go back to Hex</a>
+      </p>
 
-      </div>
+      <p>
+        <small>
+          Is something wrong? Let us know by <a href="https://github.com/hexpm/hexpm/issues">opening an issue</a> or <a
+            href="mailto:support@hex.pm">emailing support</a>.
+        </small>
+      </p>
+
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

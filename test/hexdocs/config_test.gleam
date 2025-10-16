@@ -8,9 +8,7 @@ pub fn search_url_returns_non_empty_string_test() {
   |> should.not_equal("")
 
   // Should start with http:// or https://
-  {
-    string.starts_with(url, "http://") || string.starts_with(url, "https://")
-  }
+  { string.starts_with(url, "http://") || string.starts_with(url, "https://") }
   |> should.be_true()
 }
 
@@ -20,9 +18,7 @@ pub fn hexdocs_url_returns_non_empty_string_test() {
   |> should.not_equal("")
 
   // Should start with http:// or https://
-  {
-    string.starts_with(url, "http://") || string.starts_with(url, "https://")
-  }
+  { string.starts_with(url, "http://") || string.starts_with(url, "https://") }
   |> should.be_true()
 }
 
@@ -32,8 +28,6 @@ pub fn hexpm_url_returns_non_empty_string_test() {
   |> should.not_equal("")
 
   // Should start with http:// or https://
-  {
-    string.starts_with(url, "http://") || string.starts_with(url, "https://")
-  }
+  { string.starts_with(url, "http://") || string.starts_with(url, "https://") }
   |> should.be_true()
 }

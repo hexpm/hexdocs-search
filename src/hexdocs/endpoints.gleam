@@ -7,8 +7,7 @@ pub fn search() -> Uri {
 }
 
 pub fn packages() -> Uri {
-  let assert Ok(uri) =
-    uri.parse(config.hexdocs_url() <> "/package_names.csv")
+  let assert Ok(uri) = uri.parse(config.hexdocs_url() <> "/package_names.csv")
   uri
 }
 

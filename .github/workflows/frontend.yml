@@ -23,24 +23,8 @@ jobs:
       - name: Run tests
         run: gleam test
 
-      - name: Check Gleam formatted
-        run: gleam format --check src test
-
-  build:
-    name: Build Lustre Frontend
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install OTP and Gleam
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: 27.2
-          gleam-version: 1.12.0
-          rebar3-version: 3
-
-      - name: Install dependencies
-        run: gleam deps download
-
       - name: Build Hexdocs website
         run: gleam run -m lustre/dev build
+
+      - name: Check Gleam formatted
+        run: gleam format --check src test

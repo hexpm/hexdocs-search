@@ -44,12 +44,3 @@ jobs:
 
       - name: Build Hexdocs website
         run: gleam run -m lustre/dev build
-
-      # - name: Copy files
-      #   run: |
-      #     mkdir _site
-      #     cp -r dist _site
-      #     cp -r assets _site
-
-      # - name: Upload artifacts
-      #   uses: actions/upload-pages-artifact@v3

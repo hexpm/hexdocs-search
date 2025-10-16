@@ -14,10 +14,8 @@ lustre = ">= 5.0.0 and < 6.0.0"
 modem = ">= 2.0.0 and < 3.0.0"
 
 [dev-dependencies]
-envoy = ">= 1.0.0 and < 2.0.0"
 gleeunit = ">= 1.0.0 and < 2.0.0"
 lustre_dev_tools = ">= 2.0.0 and < 3.0.0"
-simplifile = ">= 2.0.0 and < 3.0.0"
 
 [tools.lustre.dev]
 host = "0.0.0.0"

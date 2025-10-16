@@ -31,7 +31,7 @@ jobs:
           SEARCH_URL: ${{ vars.SEARCH_URL }}
           HEXDOCS_URL: ${{ vars.HEXDOCS_URL }}
           HEXPM_URL: ${{ vars.HEXPM_URL }}
-        run: gleam run -m build/config
+        run: cd config && gleam run -m config
 
       - name: Build application
         run: gleam run -m lustre/dev build

@@ -1,5 +1,4 @@
 import browser/document
-import browser/window
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/function
@@ -11,14 +10,14 @@ import gleam/pair
 import gleam/result
 import gleam/string
 import gleam/uri
-import hexdocs_search/data/model/autocomplete.{type Autocomplete}
-import hexdocs_search/data/model/route.{type Route}
-import hexdocs_search/data/model/version
-import hexdocs_search/data/msg.{type Msg}
-import hexdocs_search/effects
-import hexdocs_search/loss
-import hexdocs_search/services/hex
-import hexdocs_search/services/hexdocs
+import hexdocs/data/model/autocomplete.{type Autocomplete}
+import hexdocs/data/model/route.{type Route}
+import hexdocs/data/model/version
+import hexdocs/data/msg.{type Msg}
+import hexdocs/effects
+import hexdocs/loss
+import hexdocs/services/hex
+import hexdocs/services/hexdocs
 import lustre/effect.{type Effect}
 
 pub type Model {
@@ -155,8 +154,7 @@ fn unsubscribe_sidebar_dom_click(model: Model) {
 }
 
 fn subscribe_sidebar_dom_click() {
-  use dispatch <- effect.from()
-  use <- window.request_animation_frame()
+  use dispatch, _ <- effect.after_paint()
   document.add_listener(fn() { dispatch(msg.UserClosedSidebar) })
   |> msg.DocumentRegisteredSidebarListener
   |> dispatch

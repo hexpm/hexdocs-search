@@ -4,12 +4,12 @@ import gleam/dynamic/decode
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
-import hexdocs_search/components/iframe
-import hexdocs_search/data/model.{type Model}
-import hexdocs_search/data/model/autocomplete
-import hexdocs_search/data/msg
-import hexdocs_search/services/hex
-import hexdocs_search/services/hexdocs
+import hexdocs/components/iframe
+import hexdocs/data/model.{type Model}
+import hexdocs/data/model/autocomplete
+import hexdocs/data/msg
+import hexdocs/services/hex
+import hexdocs/services/hexdocs
 import lustre/attribute.{class}
 import lustre/element
 import lustre/element/html

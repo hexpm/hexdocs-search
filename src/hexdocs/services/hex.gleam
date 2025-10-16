@@ -8,9 +8,9 @@ import gleam/option
 import gleam/result
 import gleam/string
 import gleam/uri
-import hexdocs_search/endpoints
-import hexdocs_search/loss
-import hexdocs_search/services/hexdocs
+import hexdocs/endpoints
+import hexdocs/loss
+import hexdocs/services/hexdocs
 
 pub fn package_versions(name: String) {
   let endpoint = endpoints.package(name)

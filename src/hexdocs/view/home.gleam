@@ -3,10 +3,10 @@ import gleam/dynamic/decode
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
-import hexdocs_search/data/model.{type Model}
-import hexdocs_search/data/model/autocomplete
-import hexdocs_search/data/msg
-import hexdocs_search/view/home/footer
+import hexdocs/data/model.{type Model}
+import hexdocs/data/model/autocomplete
+import hexdocs/data/msg
+import hexdocs/view/home/footer
 import lustre/attribute.{class, id}
 import lustre/element
 import lustre/element/html

@@ -9,17 +9,17 @@ import gleam/result
 import gleam/string
 import grille_pain
 import grille_pain/lustre/toast
-import hexdocs_search/components/iframe
-import hexdocs_search/data/model.{type Model, Model}
-import hexdocs_search/data/model/autocomplete
-import hexdocs_search/data/model/route
-import hexdocs_search/data/msg.{type Msg}
-import hexdocs_search/effects
-import hexdocs_search/loss.{type Loss}
-import hexdocs_search/services/hexdocs
-import hexdocs_search/setup
-import hexdocs_search/view/home
-import hexdocs_search/view/search
+import hexdocs/components/iframe
+import hexdocs/data/model.{type Model, Model}
+import hexdocs/data/model/autocomplete
+import hexdocs/data/model/route
+import hexdocs/data/msg.{type Msg}
+import hexdocs/effects
+import hexdocs/loss.{type Loss}
+import hexdocs/services/hexdocs
+import hexdocs/setup
+import hexdocs/view/home
+import hexdocs/view/search
 import lustre
 import lustre/effect.{type Effect}
 import lustre/element/html
@@ -402,11 +402,11 @@ fn user_selected_package_filter_version(model: Model) {
   }
 }
 
-@external(javascript, "./hexdocs_search.ffi.mjs", "submitPackageInput")
+@external(javascript, "./hexdocs.ffi.mjs", "submitPackageInput")
 fn submit_package_input() -> Nil
 
-@external(javascript, "./hexdocs_search.ffi.mjs", "updateColorTheme")
+@external(javascript, "./hexdocs.ffi.mjs", "updateColorTheme")
 fn update_color_theme(color_mode: String) -> Nil
 
-@external(javascript, "./hexdocs_search.ffi.mjs", "copyUrl")
+@external(javascript, "./hexdocs.ffi.mjs", "copyUrl")
 fn copy_url() -> Nil

@@ -2,10 +2,10 @@ import browser/document
 import gleam/function
 import gleam/http/response.{type Response}
 import gleam/javascript/promise
-import hexdocs_search/data/msg
-import hexdocs_search/loss.{type Loss}
-import hexdocs_search/services/hex
-import hexdocs_search/services/hexdocs
+import hexdocs/data/msg
+import hexdocs/loss.{type Loss}
+import hexdocs/services/hex
+import hexdocs/services/hexdocs
 import lustre/effect
 
 pub fn packages() {

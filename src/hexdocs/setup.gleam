@@ -1,6 +1,6 @@
-import hexdocs_search/data/model
-import hexdocs_search/data/msg
-import hexdocs_search/effects
+import hexdocs/data/model
+import hexdocs/data/msg
+import hexdocs/effects
 import lustre/effect
 import modem
 

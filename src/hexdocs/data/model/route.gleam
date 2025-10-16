@@ -4,7 +4,7 @@ import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
 import gleam/uri.{type Uri}
-import hexdocs_search/data/model/version
+import hexdocs/data/model/version
 import modem
 
 pub type Route {

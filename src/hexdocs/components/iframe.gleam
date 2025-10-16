@@ -1,7 +1,7 @@
 import gleam/dynamic/decode
 import gleam/option.{type Option, None, Some}
 import gleam/pair
-import hexdocs_search/components/attributes
+import hexdocs/components/attributes
 import lustre
 import lustre/attribute.{type Attribute, class}
 import lustre/component

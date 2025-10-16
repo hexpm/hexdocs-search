@@ -9,9 +9,9 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import gleam/uri
-import hexdocs_search/endpoints
-import hexdocs_search/environment
-import hexdocs_search/loss
+import hexdocs/endpoints
+import hexdocs/environment
+import hexdocs/loss
 
 pub type TypeSense {
   TypeSense(document: Document, highlight: Highlights)

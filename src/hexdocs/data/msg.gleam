@@ -1,7 +1,7 @@
 import gleam/dynamic.{type Dynamic}
 import gleam/hexpm
 import gleam/uri
-import hexdocs_search/loss.{type Loss}
+import hexdocs/loss.{type Loss}
 
 pub type Msg {
   // API messages.

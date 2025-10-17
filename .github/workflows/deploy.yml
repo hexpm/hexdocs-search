@@ -54,7 +54,7 @@ jobs:
           parent: false
           headers: |-
             cache-control: public, max-age=86400
-            surrogate-key: static
+            x-goog-meta-surrogate-key: static
           predefinedAcl: publicRead
           process_gcloudignore: false
 

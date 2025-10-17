@@ -1,0 +1,8 @@
+name = "config"
+version = "1.0.0"
+target = "javascript"
+
+[dependencies]
+envoy = ">= 1.0.0 and < 2.0.0"
+gleam_stdlib = ">= 0.54.0 and < 1.0.0"
+simplifile = ">= 2.0.0 and < 3.0.0"

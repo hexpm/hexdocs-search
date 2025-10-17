@@ -6,6 +6,9 @@ priv/static/hexdocs_search.css
 building/
 .DS_Store
 
+# Generated config (run `gleam run -m build/config` to regenerate)
+/src/hexdocs/config.gleam
+
 #Added automatically by Lustre Dev Tools
 /.lustre
 /build

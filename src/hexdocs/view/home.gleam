@@ -49,7 +49,7 @@ pub fn home(model: Model) {
                 [id("logo"), class("flex items-center justify-start gap-6")],
                 [
                   html.img([
-                    attribute.src("/images/hexdocs-logo.svg"),
+                    attribute.src("/assets/images/hexdocs-logo.svg"),
                     attribute.alt("HexDocs Logo"),
                     class("w-auto h-14 lg:w-auto lg:h-24"),
                   ]),

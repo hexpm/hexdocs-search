@@ -67,7 +67,7 @@ pub fn search(model: Model) {
       html.div(
         [
           class(
-            "w-80 h-screen bg-slate-100 dark:bg-slate-800 fixed md:static z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out top-0",
+            "w-80 min-h-screen h-full bg-slate-100 dark:bg-slate-800 fixed md:static z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out top-0",
           ),
           class(case model.sidebar_opened {
             True -> "translate-x-0"

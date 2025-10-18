@@ -20,12 +20,12 @@ pub fn search(model: Model) {
     html.div(
       [
         class(
-          "fixed top-[22px] right-4 z-50 flex-col items-end gap-4 hidden 2xl:flex",
+          "fixed top-[22px] right-4 z-50 flex-col items-end gap-4 hidden 2xl:flex dark:text-white",
         ),
       ],
       [hexdocs_logo()],
     ),
-    html.div([class("flex flex-col md:flex-row")], [
+    html.div([class("bg-white dark:bg-gray-900 flex flex-col md:flex-row")], [
       html.div(
         [
           class(
@@ -425,14 +425,16 @@ fn hexdocs_logo() {
       html.span(
         [
           class(
-            "text-slate-950 text-lg font-bold font-(family-name:--font-calibri)",
+            "text-slate-950 dark:text-white text-lg font-bold font-(family-name:--font-calibri)",
           ),
         ],
         [html.text("hex")],
       ),
       html.span(
         [
-          class("text-slate-950 text-lg font-(family-name:--font-calibri)"),
+          class(
+            "text-slate-950 dark:text-white text-lg font-(family-name:--font-calibri)",
+          ),
         ],
         [html.text("docs")],
       ),

@@ -9,26 +9,6 @@ and the [Lustre Dev Tools](https://hexdocs.pm/lustre_dev_tools/).
 Lustre Dev Tools is a companion package to Lustre, in charge of compiling,
 bundling, and running the application in browser.
 
-## Configuration
-
-The application uses environment variables to configure API endpoints. Before running
-the dev server or building, you must generate the configuration file:
-
-```sh
-cd config && gleam run -m config
-```
-
-This generates `src/hexdocs/config.gleam` with default URLs. To customize URLs for
-local development:
-
-```sh
-cd config && \
-SEARCH_URL=http://localhost:9200 \
-HEXDOCS_URL=http://localhost:4000 \
-HEXPM_URL=http://localhost:4001 \
-gleam run -m config
-```
-
 ## Launching the dev server
 
 With Gleam installed on your path, you can directly start the development server

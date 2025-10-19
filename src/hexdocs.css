@@ -1,30 +1,6 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Calibri";
-  font-weight: normal;
-  font-style: normal;
-  src:
-    url("/fonts/Calibri.woff2") format("woff2"),
-    url("/fonts/Calibri.woff") format("woff");
-}
-
-@font-face {
-  font-family: "JetBrains Mono";
-  font-weight: normal;
-  font-style: normal;
-  src:
-    url("/fonts/JetBrainsMono-Regular.woff2") format("woff2"),
-    url("/fonts/JetBrainsMono-Regular.woff") format("woff");
-}
-
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
-  --font-inter: Inter, sans-serif;
-  --font-calibri: Calibri, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-
   --container-8xl: 1440px;
 
   --color-gray-50: #f0f5f9;

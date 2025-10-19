@@ -92,7 +92,7 @@ fn loading_state() {
   html.div(
     [
       class(
-        "absolute top-0 bg-white size-full flex items-center justify-center",
+        "absolute text-slate-800 dark:text-slate-300 top-0 bg-transparent size-full flex items-center justify-center",
       ),
     ],
     [

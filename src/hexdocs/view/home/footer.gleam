@@ -2,8 +2,10 @@ import lustre/attribute as a
 import lustre/element/html as h
 
 pub fn footer() {
-  h.footer([a.class("mt-16 md:mt-0 lg:-mt-32")], [
-    h.section([a.class("flex justify-end"), a.id("publishing-docs")], [hint()]),
+  h.footer([], [
+    h.section([a.class("flex justify-end"), a.id("publishing-docs")], [
+      hint(),
+    ]),
     h.section(
       [
         a.class("w-full"),
@@ -57,11 +59,13 @@ pub fn footer() {
 }
 
 pub fn hint() {
-  h.div([a.class("relative w-64 h-72")], [
+  h.div([a.class("relative mx-6")], [
     h.div(
       [
         a.class("absolute"),
-        a.class("inset-0"),
+        a.class("w-64 h-72"),
+        a.class("bottom-0"),
+        a.class("right-0"),
         a.class("bg-gray-50"),
         a.class("dark:bg-gray-700"),
         a.class("rounded-tl-xl"),
@@ -111,7 +115,9 @@ pub fn hint() {
               ],
               [h.text("here")],
             ),
-            h.span([a.class("text-gray-500 dark:text-gray-200")], [h.text(".")]),
+            h.span([a.class("text-gray-500 dark:text-gray-200")], [
+              h.text("."),
+            ]),
           ]),
           h.p([a.class("leading-tight mt-4")], [
             h.span(
@@ -129,7 +135,9 @@ pub fn hint() {
               ],
               [h.text("here")],
             ),
-            h.span([a.class("text-gray-500 dark:text-gray-200")], [h.text(".")]),
+            h.span([a.class("text-gray-500 dark:text-gray-200")], [
+              h.text("."),
+            ]),
           ]),
         ]),
       ],
@@ -137,11 +145,12 @@ pub fn hint() {
     h.div(
       [
         a.class("absolute"),
-        a.class("inset-0"),
+        a.class("w-64 h-68"),
+        a.class("bottom-4"),
+        a.class("-right-3.5"),
         a.class("bg-gray-100"),
         a.class("dark:bg-gray-800"),
         a.class("rotate-6"),
-        a.class("left-4"),
         a.class("rounded-tl-xl"),
         a.class("rounded-tr-xl"),
         a.class("z-0"),

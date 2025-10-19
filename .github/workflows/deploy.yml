@@ -26,15 +26,6 @@ jobs:
       - name: Install dependencies
         run: gleam deps download
 
-      - name: Generate config
-        env:
-          SEARCH_URL: ${{ vars.SEARCH_URL }}
-          HEXDOCS_URL: ${{ vars.HEXDOCS_URL }}
-          HEXPM_URL: ${{ vars.HEXPM_URL }}
-        run: |
-          cd config && gleam run -m config
-          cd .. && gleam format src/hexdocs/config.gleam
-
       - name: Build application
         run: gleam run -m lustre/dev build
 

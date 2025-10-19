@@ -48,12 +48,12 @@ pub fn home(model: Model) {
               [class("flex flex-col justify-around mt-14 md:mt-26 lg:mt-40")],
               [
                 html.div(
-                  [id("logo"), class("flex items-center justify-start gap-6")],
+                  [id("logo"), class("flex align-middle justify-start gap-3")],
                   [
                     html.img([
                       attribute.src("/images/hexdocs-logo.svg"),
                       attribute.alt("HexDocs Logo"),
-                      class("w-auto h-10 lg:w-auto lg:h-12"),
+                      class("w-auto h-10 lg:h-12"),
                     ]),
                     html.h1(
                       [

@@ -69,21 +69,15 @@ fn view(model: Model) {
   case model.to {
     None -> element.none()
     Some(to) -> {
-      html.div(
-        [class("relative size-full rounded-lg shadow-sm overflow-hidden")],
-        [
-          html.iframe([
-            class("size-full overflow-scroll"),
-            attribute.title(model.title),
-            event.on("load", decode.success(IFrameStateChanged(Loaded))),
-            attribute.src(to),
-          ]),
-          case model.state {
-            Loaded -> element.none()
-            Loading -> loading_state()
-          },
-        ],
-      )
+      html.iframe([
+        attribute.class(case model.state {
+          Loaded -> "mt-4 h-full w-full rounded-lg"
+          Loading -> "h-0"
+        }),
+        attribute.title(model.title),
+        event.on("load", decode.success(IFrameStateChanged(Loaded))),
+        attribute.src(to),
+      ])
     }
   }
 }

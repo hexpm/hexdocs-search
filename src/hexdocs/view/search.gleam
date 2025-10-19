@@ -538,13 +538,15 @@ fn result_card(model: Model, result: hexdocs.TypeSense) {
         {
           Error(_) -> element.none()
           Ok(link) -> {
-            html.div([class("h-100 pt-4")], [
-              iframe.iframe([
-                class("rounded-lg shadow-sm"),
-                iframe.to(link),
-                iframe.title(result.document.package),
-              ]),
-            ])
+            html.div(
+              [class("px-4 bg-white dark:bg-gray-950 h-full rounded-lg")],
+              [
+                iframe.iframe([
+                  iframe.to(link),
+                  iframe.title(result.document.package),
+                ]),
+              ],
+            )
           }
         }
       }

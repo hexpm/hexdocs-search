@@ -25,7 +25,7 @@ pub fn home(model: Model) {
         class("px-5"),
       ],
       [
-        html.main([class("flex-grow")], [
+        html.main([], [
           html.section([], [
             html.div([id("nav"), class("flex justify-between items-center")], [
               html.a(

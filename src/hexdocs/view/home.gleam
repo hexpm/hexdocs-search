@@ -13,7 +13,6 @@ import lustre/element/html
 import lustre/event
 
 pub fn home(model: Model) {
-  // let go_back = event.on_click(msg.UserClickedGoBack)
   let toggle_mode = event.on_click(msg.UserToggledDarkMode)
   html.div([class("bg-white dark:bg-gray-900")], [
     html.div(
@@ -58,7 +57,7 @@ pub fn home(model: Model) {
                     html.h1(
                       [
                         class(
-                          "text-gray-700 dark:text-gray-700 text-4xl lg:text-5xl",
+                          "text-gray-700 dark:text-gray-200 text-4xl lg:text-5xl",
                         ),
                       ],
                       [
@@ -172,10 +171,7 @@ pub fn home(model: Model) {
                         ),
                       ],
                       [
-                        html.text(
-                          "To access a package documentation
-                                    ",
-                        ),
+                        html.text("To access a package documentation"),
                       ],
                     ),
                     html.span(

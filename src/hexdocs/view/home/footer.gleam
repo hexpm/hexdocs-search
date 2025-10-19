@@ -63,7 +63,7 @@ pub fn hint() {
         a.class("absolute"),
         a.class("inset-0"),
         a.class("bg-gray-50"),
-        a.class("dark:bg-gray-800"),
+        a.class("dark:bg-gray-700"),
         a.class("rounded-tl-xl"),
         a.class("rounded-tr-xl"),
         a.class("z-10"),
@@ -74,7 +74,7 @@ pub fn hint() {
             a.class("w-14"),
             a.class("h-14"),
             a.class("bg-gray-100"),
-            a.class("dark:bg-gray-100"),
+            a.class("dark:bg-gray-800"),
             a.class("rounded-full"),
             a.class("flex"),
             a.class("items-center"),
@@ -86,7 +86,7 @@ pub fn hint() {
               [
                 a.class("ri-contacts-book-upload-line"),
                 a.class("text-gray-600"),
-                a.class("dark:text-gray-600"),
+                a.class("dark:text-gray-100"),
                 a.class("text-xl"),
               ],
               [],
@@ -106,7 +106,7 @@ pub fn hint() {
             ]),
             h.a(
               [
-                a.class("text-purple-700 font-medium"),
+                a.class("text-blue-600 font-medium"),
                 a.href("https://hexdocs.pm/hex/Mix.Tasks.Hex.Publish.html"),
               ],
               [h.text("here")],
@@ -124,7 +124,7 @@ pub fn hint() {
             ),
             h.a(
               [
-                a.class("text-purple-700 font-medium"),
+                a.class("text-blue-600 font-medium"),
                 a.href("https://hexdocs.pm/elixir/writing-documentation.html"),
               ],
               [h.text("here")],
@@ -139,7 +139,7 @@ pub fn hint() {
         a.class("absolute"),
         a.class("inset-0"),
         a.class("bg-gray-100"),
-        a.class("dark:bg-gray-700"),
+        a.class("dark:bg-gray-800"),
         a.class("rotate-6"),
         a.class("left-4"),
         a.class("rounded-tl-xl"),

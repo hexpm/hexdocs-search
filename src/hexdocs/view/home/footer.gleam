@@ -26,16 +26,30 @@ pub fn footer() {
           h.span([a.class("text-gray-600 dark:text-gray-200")], [
             h.text("Is something wrong? Let us know by "),
           ]),
-          h.span([a.class("text-blue-600 dark:text-blue-600 font-medium")], [
-            h.text("Opening an Issue"),
-          ]),
+          h.a(
+            [
+              a.class("text-blue-600 dark:text-blue-600 font-medium"),
+              a.href("https://github.com/hexpm/hexpm/issues"),
+            ],
+            [
+              h.text("Opening an Issue"),
+            ],
+          ),
           h.span([a.class("text-gray-600 dark:text-gray-200")], [h.text(" or ")]),
-          h.span([a.class("text-blue-600 dark:text-blue-600 font-medium")], [
-            h.text("Emailing Support"),
-          ]),
+          h.a(
+            [
+              a.class("text-blue-600 dark:text-blue-600 font-medium"),
+              a.href("mailto:support@hex.pm"),
+            ],
+            [
+              h.text("Emailing Support"),
+            ],
+          ),
         ]),
         h.div([a.class("text-gray-600 dark:text-gray-200")], [
-          h.span([], [h.text("Search powered by Typesense")]),
+          h.a([a.href("https://typesense.org")], [
+            h.text("Search powered by Typesense"),
+          ]),
         ]),
       ],
     ),
@@ -90,14 +104,31 @@ pub fn hint() {
                 your package, you can find more information ",
               ),
             ]),
-            h.span([a.class("text-purple-700 font-medium")], [h.text("here")]),
+            h.a(
+              [
+                a.class("text-purple-700 font-medium"),
+                a.href("https://hexdocs.pm/hex/Mix.Tasks.Hex.Publish.html"),
+              ],
+              [h.text("here")],
+            ),
             h.span([a.class("text-gray-500 dark:text-gray-200")], [h.text(".")]),
           ]),
           h.p([a.class("leading-tight mt-4")], [
-            h.span([a.class("text-gray-500 dark:text-gray-200")], [
-              h.text("Learn how to write documentation "),
-            ]),
-            h.span([a.class("text-purple-700 font-medium")], [h.text("here")]),
+            h.span(
+              [
+                a.class("text-gray-500 dark:text-gray-200"),
+              ],
+              [
+                h.text("Learn how to write documentation "),
+              ],
+            ),
+            h.a(
+              [
+                a.class("text-purple-700 font-medium"),
+                a.href("https://hexdocs.pm/elixir/writing-documentation.html"),
+              ],
+              [h.text("here")],
+            ),
             h.span([a.class("text-gray-500 dark:text-gray-200")], [h.text(".")]),
           ]),
         ]),

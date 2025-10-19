@@ -19,7 +19,7 @@ pub fn home(model: Model) {
     html.div(
       [
         class("flex flex-col"),
-        class("min-h-screen max-w-8xl"),
+        class("min-h-screen max-w-6xl"),
         class("mx-auto"),
         class("dark:text-gray-50"),
         class("transition-colors duration-200"),
@@ -31,7 +31,7 @@ pub fn home(model: Model) {
             html.div([id("nav"), class("flex justify-between items-center")], [
               html.a(
                 [
-                  attribute.href("#"),
+                  attribute.href("https://hex.pm/"),
                   class("text-sm text-gray-600 dark:text-gray-100"),
                 ],
                 [html.text("← Go back to Hex")],
@@ -51,7 +51,7 @@ pub fn home(model: Model) {
                   [id("logo"), class("flex items-center justify-start gap-6")],
                   [
                     html.img([
-                      attribute.src("/assets/images/hexdocs-logo.svg"),
+                      attribute.src("/images/hexdocs-logo.svg"),
                       attribute.alt("HexDocs Logo"),
                       class("w-auto h-10 lg:w-auto lg:h-12"),
                     ]),
@@ -293,11 +293,15 @@ fn autocomplete(model: Model) {
 }
 
 fn empty_package_autocomplete() {
-  html.text("No packages found")
+  html.div([attribute.class("py-2 px-4 text-md text-red-800")], [
+    html.text("No packages found"),
+  ])
 }
 
 fn empty_versions_autocomplete() {
-  html.text("No versions found")
+  html.div([attribute.class("py-2 px-4 text-md text-red-800")], [
+    html.text("No versions found"),
+  ])
 }
 
 fn on_select_package(package: String) {

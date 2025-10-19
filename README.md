@@ -28,6 +28,8 @@ Building the application can be done with the Lustre Dev Tools too.
 gleam run -m lustre/dev build
 ```
 
+Then you can deploy the contents of the `dist/` folder.
+
 ## Quick reminder of the structure
 
 - All source files reside in `src` folder.

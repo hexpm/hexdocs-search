@@ -11,11 +11,11 @@ gleam_regexp = ">= 1.1.0 and < 2.0.0"
 gleam_stdlib = ">= 0.54.0 and < 1.0.0"
 grille_pain = ">= 1.1.0 and < 2.0.0"
 lustre = ">= 5.0.0 and < 6.0.0"
-modem = ">= 2.0.0 and < 3.0.0"
+modem = ">= 2.1.1 and < 3.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
-lustre_dev_tools = ">= 2.0.0 and < 3.0.0"
+lustre_dev_tools = ">= 2.1.3 and < 3.0.0"
 
 [tools.lustre.dev]
 host = "0.0.0.0"
@@ -34,24 +34,24 @@ stylesheets = [
 
 [[tools.lustre.html.links]]
 rel = "icon"
-href = "/assets/favicon/favicon-96x96.png"
+href = "/favicon/favicon-96x96.png"
 sizes="96x96"
 type = "image/png"
 
 [[tools.lustre.html.links]]
 rel = "icon"
 type = "image/svg+xml"
-href = "/assets/favicon/favicon.svg"
+href = "/favicon/favicon.svg"
 
 [[tools.lustre.html.links]]
 rel = "shortcut icon"
-href = "/assets/favicon/favicon.ico"
+href = "/favicon/favicon.ico"
 
 [[tools.lustre.html.links]]
 rel = "apple-touch-icon"
 sizes = "180x180"
-href = "/assets/favicon/apple-touch-icon.png"
+href = "/favicon/apple-touch-icon.png"
 
 [[tools.lustre.html.links]]
 rel = "manifest"
-href = "/assets/favicon/site.webmanifest"
+href = "/favicon/site.webmanifest"

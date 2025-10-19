@@ -419,7 +419,7 @@ fn hexdocs_logo() {
     html.img([
       class("w-auto h-10"),
       attribute.alt("HexDocs Logo"),
-      attribute.src("/assets/images/hexdocs-logo.svg"),
+      attribute.src("/images/hexdocs-logo.svg"),
     ]),
     html.div([class("flex items-center")], [
       html.span(

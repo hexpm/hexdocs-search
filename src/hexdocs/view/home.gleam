@@ -289,13 +289,13 @@ fn autocomplete(model: Model) {
 }
 
 fn empty_package_autocomplete() {
-  html.div([attribute.class("py-2 px-4 text-md text-red-800")], [
+  html.div([attribute.class("py-2 px-4 text-md text-red-700")], [
     html.text("No packages found"),
   ])
 }
 
 fn empty_versions_autocomplete() {
-  html.div([attribute.class("py-2 px-4 text-md text-red-800")], [
+  html.div([attribute.class("py-2 px-4 text-md text-red-700")], [
     html.text("No versions found"),
   ])
 }

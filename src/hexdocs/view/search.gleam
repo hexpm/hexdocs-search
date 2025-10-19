@@ -20,7 +20,7 @@ pub fn search(model: Model) {
     html.div(
       [
         class(
-          "fixed top-[22px] right-4 z-50 flex-col items-end gap-4 hidden 2xl:flex dark:text-white",
+          "fixed top-[28px] right-4 z-50 flex-col items-end gap-4 hidden 2xl:flex dark:text-white",
         ),
       ],
       [hexdocs_logo()],
@@ -50,18 +50,6 @@ pub fn search(model: Model) {
             ],
           ),
           hexdocs_logo(),
-          html.button([class("p-2"), event.on_click(msg.UserToggledDarkMode)], [
-            html.i(
-              [
-                class("theme-icon text-xl text-slate-700 dark:text-slate-300"),
-                class(case model.dark_mode.mode {
-                  msg.Dark -> "ri-sun-line"
-                  msg.Light -> "ri-moon-line"
-                }),
-              ],
-              [],
-            ),
-          ]),
         ],
       ),
       html.div(
@@ -78,7 +66,7 @@ pub fn search(model: Model) {
         ],
         [
           html.div([class("p-5")], [
-            html.div([class("flex justify-between items-center mt-2")], [
+            html.div([class("flex justify-between items-center md:mt-2")], [
               html.h2(
                 [
                   class(
@@ -107,86 +95,89 @@ pub fn search(model: Model) {
             html.form(
               [event.on_submit(fn(_) { msg.UserSubmittedPackagesFilter })],
               [
-                html.div([class("mt-4 flex gap-2")], [
-                  html.div(
-                    [
-                      class(
-                        "flex-grow bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
-                      ),
-                    ],
-                    [
-                      html.input([
-                        attribute.id("search-package-input"),
+                html.div(
+                  [class("mt-4 flex gap-2 text-slate-700 dark:text-slate-300")],
+                  [
+                    html.div(
+                      [
                         class(
-                          "search-input w-full h-10 bg-transparent px-10 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
+                          "flex-grow bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
                         ),
-                        attribute.placeholder("Package Name"),
-                        attribute.type_("text"),
-                        attribute.value(
-                          model.search_packages_filter_input_displayed,
-                        ),
-                        event.on_input(msg.UserEditedPackagesFilterInput),
-                        event.on_focus(msg.UserFocusedPackagesFilterInput),
-                        event.on_click(msg.None) |> event.stop_propagation,
-                        event.advanced(
-                          "keydown",
-                          on_arrow_up_down(model.Package),
-                        ),
-                      ]),
-                      html.i(
-                        [
+                      ],
+                      [
+                        html.input([
+                          attribute.id("search-package-input"),
                           class(
-                            "ri-search-2-line absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 text-lg",
+                            "search-input w-full h-10 bg-transparent px-10 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
                           ),
-                        ],
-                        [],
-                      ),
-                      autocomplete(
-                        model,
-                        model.Package,
-                        model.AutocompleteOnPackage,
-                      ),
-                    ],
-                  ),
-                  html.div(
-                    [
-                      class(
-                        "w-20 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
-                      ),
-                    ],
-                    [
-                      html.input([
-                        attribute.id("search-version-input"),
-                        class(
-                          "search-input w-full h-10 bg-transparent px-2 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-[0.2]",
-                        ),
-                        attribute.placeholder("ver"),
-                        attribute.type_("text"),
-                        attribute.value(
-                          model.search_packages_filter_version_input_displayed,
-                        ),
-                        attribute.disabled(
-                          !list.contains(
-                            model.packages,
+                          attribute.placeholder("Package Name"),
+                          attribute.type_("text"),
+                          attribute.value(
                             model.search_packages_filter_input_displayed,
                           ),
+                          event.on_input(msg.UserEditedPackagesFilterInput),
+                          event.on_focus(msg.UserFocusedPackagesFilterInput),
+                          event.on_click(msg.None) |> event.stop_propagation,
+                          event.advanced(
+                            "keydown",
+                            on_arrow_up_down(model.Package),
+                          ),
+                        ]),
+                        html.i(
+                          [
+                            class(
+                              "ri-search-2-line absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 text-lg",
+                            ),
+                          ],
+                          [],
                         ),
-                        event.on_input(msg.UserEditedPackagesFilterVersion),
-                        event.on_focus(msg.UserFocusedPackagesFilterVersion),
-                        event.on_click(msg.None) |> event.stop_propagation,
-                        event.advanced(
-                          "keydown",
-                          on_arrow_up_down(model.Version),
+                        autocomplete(
+                          model,
+                          model.Package,
+                          model.AutocompleteOnPackage,
                         ),
-                      ]),
-                      autocomplete(
-                        model,
-                        model.Version,
-                        model.AutocompleteOnVersion,
-                      ),
-                    ],
-                  ),
-                ]),
+                      ],
+                    ),
+                    html.div(
+                      [
+                        class(
+                          "w-20 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
+                        ),
+                      ],
+                      [
+                        html.input([
+                          attribute.id("search-version-input"),
+                          class(
+                            "search-input w-full h-10 bg-transparent px-2 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-[0.2]",
+                          ),
+                          attribute.placeholder("ver"),
+                          attribute.type_("text"),
+                          attribute.value(
+                            model.search_packages_filter_version_input_displayed,
+                          ),
+                          attribute.disabled(
+                            !list.contains(
+                              model.packages,
+                              model.search_packages_filter_input_displayed,
+                            ),
+                          ),
+                          event.on_input(msg.UserEditedPackagesFilterVersion),
+                          event.on_focus(msg.UserFocusedPackagesFilterVersion),
+                          event.on_click(msg.None) |> event.stop_propagation,
+                          event.advanced(
+                            "keydown",
+                            on_arrow_up_down(model.Version),
+                          ),
+                        ]),
+                        autocomplete(
+                          model,
+                          model.Version,
+                          model.AutocompleteOnVersion,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 html.div([class("mt-4 flex gap-2")], [
                   html.button(
                     [
@@ -201,37 +192,28 @@ pub fn search(model: Model) {
                       ]),
                     ],
                   ),
-                  html.button(
-                    [
-                      event.on_click(msg.UserClickedShare),
-                      class(
-                        "w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center cursor-pointer",
-                      ),
-                    ],
-                    [
-                      html.i(
-                        [
-                          class(
-                            "ri-share-forward-line text-slate-500 dark:text-slate-400 text-lg",
-                          ),
-                        ],
-                        [],
-                      ),
-                    ],
-                  ),
                 ]),
               ],
             ),
             html.hr([class("mt-6 border-slate-200 dark:border-slate-700")]),
             case list.is_empty(model.search_packages_filters) {
               True -> {
-                html.div([class("text-slate-950 dark:text-slate-50 pt-4")], [
-                  html.text("No package selected, searching all packages"),
+                html.div([class("text-slate-700 dark:text-slate-300 pt-4")], [
+                  html.text(
+                    "No package selected, searching all packages and all versions.",
+                  ),
                 ])
               }
               False -> {
                 element.fragment({
-                  use filter <- list.map(model.search_packages_filters)
+                  let sorted_filters =
+                    list.sort(model.search_packages_filters, fn(a, b) {
+                      let #(package_a, _version_a) = a
+                      let #(package_b, _version_b) = b
+                      string.compare(package_a, package_b)
+                    })
+
+                  use filter <- list.map(sorted_filters)
                   let #(package, version) = filter
                   html.div([class("flex justify-between items-center mt-4")], [
                     html.div(
@@ -240,7 +222,7 @@ pub fn search(model: Model) {
                         html.div(
                           [
                             class(
-                              "self-stretch justify-start text-gray-950 dark:text-slate-50 text-lg font-semibold leading-none",
+                              "self-stretch justify-start text-gray-950 dark:text-slate-50 text-md font-semibold leading-none",
                             ),
                           ],
                           [html.text(package)],
@@ -369,7 +351,7 @@ fn autocomplete(
   html.div(
     [
       class(
-        "absolute top-14 w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden",
+        "absolute z-10 top-14 w-full min-w-[120px] bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden",
       ),
     ],
     [
@@ -405,7 +387,9 @@ fn autocomplete(
 }
 
 fn empty_autocomplete() {
-  html.text("No packages found")
+  html.div([attribute.class("py-2 px-4 text-md text-red-700")], [
+    html.text("No packages found"),
+  ])
 }
 
 fn on_select_package(package: String) {
@@ -417,7 +401,7 @@ fn on_select_package(package: String) {
 fn hexdocs_logo() {
   html.a([class("flex items-center gap-2"), attribute.href("/")], [
     html.img([
-      class("w-auto h-10"),
+      class("w-auto h-6"),
       attribute.alt("HexDocs Logo"),
       attribute.src("/images/hexdocs-logo.svg"),
     ]),
@@ -440,12 +424,9 @@ fn hexdocs_logo() {
 
 fn trash_button(filter: #(String, String)) {
   let on_delete = event.on_click(msg.UserDeletedPackagesFilter(filter))
-  html.div(
-    [class("w-5 h-5 relative overflow-hidden cursor-pointer"), on_delete],
-    [
-      sidebar_icon("ri-delete-bin-5-fill"),
-    ],
-  )
+  html.div([class("h-5 relative overflow-hidden cursor-pointer"), on_delete], [
+    sidebar_icon("ri-delete-bin-5-fill"),
+  ])
 }
 
 fn result_card(model: Model, result: hexdocs.TypeSense) {

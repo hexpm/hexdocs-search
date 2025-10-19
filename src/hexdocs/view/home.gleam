@@ -23,16 +23,16 @@ pub fn home(model: Model) {
         class("mx-auto"),
         class("dark:text-gray-50"),
         class("transition-colors duration-200"),
-        class("px-4 lg:px-0"),
+        class("px-5"),
       ],
       [
         html.main([class("flex-grow")], [
-          html.section([class("sm:py-8 ly:py-10")], [
+          html.section([], [
             html.div([id("nav"), class("flex justify-between items-center")], [
               html.a(
                 [
                   attribute.href("#"),
-                  class("text-sm text-gray-600 dark:text-gray-100 mt-10"),
+                  class("text-sm text-gray-600 dark:text-gray-100"),
                 ],
                 [html.text("← Go back to Hex")],
               ),
@@ -44,135 +44,127 @@ pub fn home(model: Model) {
                 [html.i([class("theme-icon text-xl")], [])],
               ),
             ]),
-            html.div([class("flex flex-col justify-around mt-14 lg:mt-40")], [
-              html.div(
-                [id("logo"), class("flex items-center justify-start gap-6")],
-                [
-                  html.img([
-                    attribute.src("/assets/images/hexdocs-logo.svg"),
-                    attribute.alt("HexDocs Logo"),
-                    class("w-auto h-14 lg:w-auto lg:h-24"),
-                  ]),
-                  html.h1(
-                    [
-                      class(
-                        "text-gray-700 dark:text-gray-700 text-5xl lg:text-7xl font-(family-name:--font-calibri)",
-                      ),
-                    ],
-                    [
-                      html.span([class("font-semibold")], [html.text("hex")]),
-                      html.span([class("font-light")], [html.text("docs")]),
-                    ],
-                  ),
-                ],
-              ),
-              html.form(
-                [
-                  event.on_submit(fn(_) { msg.UserSubmittedSearch })
-                    |> event.prevent_default
-                    |> event.stop_propagation,
-                  id("search"),
-                  class(
-                    "flex flex-col lg:flex-row items-center gap-4 mt-10 lg:mt-20",
-                  ),
-                ],
-                [
-                  html.div([class("relative max-w-lg w-full")], [
-                    html.input([
-                      attribute.value(model.home_input_displayed),
-                      event.on_input(msg.UserEditedSearch),
-                      event.on_click(msg.None) |> event.stop_propagation,
-                      event.on_focus(msg.UserFocusedSearch),
-                      event.advanced("keydown", on_arrow_up_down(model)),
-                      attribute.autofocus(True),
-                      attribute.type_("text"),
-                      class("search-input w-full bg-white dark:bg-gray-800"),
-                      class(
-                        "rounded-lg border border-gray-200 dark:border-gray-700",
-                      ),
-                      class(
-                        "font-(family-name:--font-inter) placeholder:text-gray-400 dark:placeholder:text-gray-400 text-gray-700 dark:text-gray-100",
-                      ),
-                      class("px-10 py-3"),
-                      class(
-                        "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                      ),
-                      attribute.placeholder("Search for packages..."),
+            html.div(
+              [class("flex flex-col justify-around mt-14 md:mt-26 lg:mt-40")],
+              [
+                html.div(
+                  [id("logo"), class("flex items-center justify-start gap-6")],
+                  [
+                    html.img([
+                      attribute.src("/assets/images/hexdocs-logo.svg"),
+                      attribute.alt("HexDocs Logo"),
+                      class("w-auto h-10 lg:w-auto lg:h-12"),
                     ]),
-                    html.i(
+                    html.h1(
                       [
                         class(
-                          "ri-search-2-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg",
+                          "text-gray-700 dark:text-gray-700 text-4xl lg:text-5xl",
                         ),
                       ],
-                      [],
+                      [
+                        html.span([class("font-semibold")], [html.text("hex")]),
+                        html.span([class("font-light")], [html.text("docs")]),
+                      ],
                     ),
-                    autocomplete(model),
-                  ]),
-                  html.button(
-                    [
-                      event.on("click", decode.failure(msg.None, ""))
-                        |> event.stop_propagation,
-                      class(
-                        "px-6 py-3 bg-blue-600 dark:bg-blue-600 text-gray-50 font-(family-name:--font-inter) rounded-lg hover:bg-blue-700 transition duration-200 whitespace-nowrap w-full sm:w-auto",
-                      ),
-                    ],
-                    [html.text("Search Packages")],
-                  ),
-                ],
-              ),
-              html.div([id("how-to"), class("mt-10 lg:mt-32")], [
-                html.div([], [
-                  html.h6(
-                    [
-                      class(
-                        "text-gray-700 dark:text-gray-100 text-xl font-semibold font-(family-name:--font-inter) leading-loose",
-                      ),
-                    ],
-                    [html.text("To search specific packages")],
-                  ),
-                  html.span(
-                    [
-                      class(
-                        "text-gray-600 dark:text-gray-200 font-(family-name:--font-inter)",
-                      ),
-                    ],
-                    [html.text("Type ")],
-                  ),
-                  html.span(
-                    [class("bg-black px-0.5 text-gray-50 font-mono rounded")],
-                    [html.text("#")],
-                  ),
-                  html.span(
-                    [
-                      class(
-                        "text-gray-600 dark:text-gray-200 font-(family-name:--font-inter)",
-                      ),
-                    ],
-                    [
-                      html.text(
-                        " to scope your search to one or more packages.",
-                      ),
-                      html.br([]),
-                      html.text("Use "),
-                    ],
-                  ),
-                  html.span(
-                    [class("bg-black px-0.5 text-gray-50 font-mono rounded")],
-                    [html.text("#<package>:<version>")],
-                  ),
-                  html.span(
-                    [
-                      class(
-                        "text-gray-600 dark:text-gray-200 font-(family-name:--font-inter)",
-                      ),
-                    ],
-                    [html.text(" to pick a specific version.")],
-                  ),
-                ]),
-                html.div(
-                  [attribute.class("font-(family-name:--font-inter) mt-10")],
+                  ],
+                ),
+                html.form(
                   [
+                    event.on_submit(fn(_) { msg.UserSubmittedSearch })
+                      |> event.prevent_default
+                      |> event.stop_propagation,
+                    id("search"),
+                    class("flex flex-col md:flex-row gap-4 mt-5"),
+                  ],
+                  [
+                    html.div([class("relative md:max-w-lg w-full")], [
+                      html.input([
+                        attribute.value(model.home_input_displayed),
+                        event.on_input(msg.UserEditedSearch),
+                        event.on_click(msg.None) |> event.stop_propagation,
+                        event.on_focus(msg.UserFocusedSearch),
+                        event.advanced("keydown", on_arrow_up_down(model)),
+                        attribute.autofocus(True),
+                        attribute.type_("text"),
+                        class("search-input w-full bg-white dark:bg-gray-800"),
+                        class(
+                          "rounded-lg border border-gray-200 dark:border-gray-700",
+                        ),
+                        class(
+                          "placeholder:text-gray-400 dark:placeholder:text-gray-400 text-gray-700 dark:text-gray-100",
+                        ),
+                        class("px-10 py-3"),
+                        class(
+                          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                        ),
+                        attribute.placeholder("Search for packages..."),
+                      ]),
+                      html.i(
+                        [
+                          class(
+                            "ri-search-2-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg",
+                          ),
+                        ],
+                        [],
+                      ),
+                      autocomplete(model),
+                    ]),
+                    html.button(
+                      [
+                        event.on("click", decode.failure(msg.None, ""))
+                          |> event.stop_propagation,
+                        class(
+                          "px-6 py-3 bg-blue-600 dark:bg-blue-600 text-gray-50 rounded-lg hover:bg-blue-700 transition duration-200 whitespace-nowrap w-full sm:w-auto",
+                        ),
+                      ],
+                      [html.text("Search Packages")],
+                    ),
+                  ],
+                ),
+                html.div([id("how-to"), class("mt-16 md:mt-24 lg:mt-32")], [
+                  html.div([], [
+                    html.h6(
+                      [
+                        class(
+                          "text-gray-700 dark:text-gray-100 text-xl font-semibold leading-loose",
+                        ),
+                      ],
+                      [html.text("To search specific packages")],
+                    ),
+                    html.span(
+                      [
+                        class("text-gray-600 dark:text-gray-200"),
+                      ],
+                      [html.text("Type ")],
+                    ),
+                    html.span(
+                      [class("bg-black px-0.5 text-gray-50 font-mono rounded")],
+                      [html.text("#")],
+                    ),
+                    html.span(
+                      [
+                        class("text-gray-600 dark:text-gray-200"),
+                      ],
+                      [
+                        html.text(
+                          " to scope your search to one or more packages.",
+                        ),
+                        html.br([]),
+                        html.text("Use "),
+                      ],
+                    ),
+                    html.span(
+                      [class("bg-black px-0.5 text-gray-50 font-mono rounded")],
+                      [html.text("#<package>:<version>")],
+                    ),
+                    html.span(
+                      [
+                        class("text-gray-600 dark:text-gray-200"),
+                      ],
+                      [html.text(" to pick a specific version.")],
+                    ),
+                  ]),
+                  html.div([attribute.class("mt-10")], [
                     html.h6(
                       [
                         attribute.class(
@@ -218,10 +210,10 @@ pub fn home(model: Model) {
                       [attribute.class("text-gray-600 dark:text-gray-200")],
                       [html.text("<package>/<version>")],
                     ),
-                  ],
-                ),
-              ]),
-            ]),
+                  ]),
+                ]),
+              ],
+            ),
           ]),
         ]),
         footer.footer(),

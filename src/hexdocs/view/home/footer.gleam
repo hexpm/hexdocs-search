@@ -2,7 +2,7 @@ import lustre/attribute as a
 import lustre/element/html as h
 
 pub fn footer() {
-  h.footer([a.class("mt-16 lg:mt-auto")], [
+  h.footer([a.class("mt-16 md:mt-0 lg:-mt-32")], [
     h.section([a.class("flex justify-end"), a.id("publishing-docs")], [hint()]),
     h.section(
       [

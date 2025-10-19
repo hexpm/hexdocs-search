@@ -424,17 +424,13 @@ fn hexdocs_logo() {
     html.div([class("flex items-center")], [
       html.span(
         [
-          class(
-            "text-slate-950 dark:text-white text-lg font-bold font-(family-name:--font-calibri)",
-          ),
+          class("text-slate-950 dark:text-white text-lg font-bold"),
         ],
         [html.text("hex")],
       ),
       html.span(
         [
-          class(
-            "text-slate-950 dark:text-white text-lg font-(family-name:--font-calibri)",
-          ),
+          class("text-slate-950 dark:text-white text-lg"),
         ],
         [html.text("docs")],
       ),

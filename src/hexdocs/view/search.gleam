@@ -101,7 +101,7 @@ pub fn search(model: Model) {
                     html.div(
                       [
                         class(
-                          "bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
+                          "flex-grow bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 relative",
                         ),
                       ],
                       [
@@ -183,7 +183,7 @@ pub fn search(model: Model) {
                     [
                       attribute.type_("submit"),
                       class(
-                        "bg-blue-600 hover:bg-blue-700 text-slate-100 rounded-lg h-10 flex items-center justify-center transition duration-200",
+                        "flex-grow bg-blue-600 hover:bg-blue-700 text-slate-100 rounded-lg h-10 flex items-center justify-center transition duration-200",
                       ),
                     ],
                     [

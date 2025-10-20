@@ -26,18 +26,6 @@ pub fn package_versions(name: String) {
   })
 }
 
-pub fn go_to_link(document: hexdocs.Document) {
-  case string.split(document.package, on: "-") {
-    [name, version, ..rest] -> {
-      let version = string.join([version, ..rest], with: "-")
-      [config.hexdocs_url(), name, version, document.ref]
-      |> string.join(with: "/")
-      |> Ok
-    }
-    _ -> Error(Nil)
-  }
-}
-
 pub fn preview_link(document: hexdocs.Document, theme: String) {
   let assert [name, vsn] = string.split(document.package, on: "-")
   [config.hexdocs_url(), name, vsn, document.ref]

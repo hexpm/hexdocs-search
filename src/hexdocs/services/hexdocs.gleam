@@ -5,17 +5,13 @@ import gleam/http/request
 import gleam/int
 import gleam/javascript/promise
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{Some}
 import gleam/result
 import gleam/string
 import gleam/uri
 import hexdocs/config
 import hexdocs/endpoints
 import hexdocs/loss
-
-pub type TypeSense {
-  TypeSense(document: Document, highlight: Highlights)
-}
 
 pub type Document {
   Document(
@@ -27,14 +23,6 @@ pub type Document {
     title: String,
     type_: String,
   )
-}
-
-pub type Highlights {
-  Highlights(doc: Option(Highlight), title: Option(Highlight))
-}
-
-pub type Highlight {
-  Highlight(matched_tokens: List(String), snippet: String)
 }
 
 pub fn packages() {
@@ -73,13 +61,7 @@ pub fn typesense_decoder() {
         Document(doc:, id:, package:, proglang:, ref:, title:, type_:)
         |> decode.success
       })
-      use highlight <- decode.field("highlight", {
-        let highlight = highlight_decoder() |> decode.map(Some)
-        use doc <- decode.optional_field("doc", None, highlight)
-        use title <- decode.optional_field("title", None, highlight)
-        decode.success(Highlights(doc:, title:))
-      })
-      decode.success(TypeSense(document:, highlight:))
+      decode.success(document)
     })
   })
   decode.success(#(found, hits))
@@ -96,6 +78,7 @@ fn new_search_query_params(
   |> list.key_set("query_by_weights", "3,1,1")
   |> list.key_set("page", int.to_string(page))
   |> list.key_set("per_page", int.to_string(config.per_page()))
+  |> list.key_set("highlight_fields", "none")
   |> add_filter_by_packages_param(packages)
   |> uri.query_to_string
 }
@@ -112,10 +95,32 @@ fn add_filter_by_packages_param(
   |> list.key_set(query, "filter_by", _)
 }
 
-fn highlight_decoder() {
-  let matched_tokens = decode.list(decode.string)
-  use matched_tokens <- decode.field("matched_tokens", matched_tokens)
-  use snippet <- decode.field("snippet", decode.string)
-  Highlight(matched_tokens:, snippet:)
-  |> decode.success
+pub fn snippet(doc: String, search_input: String) -> String {
+  // Extract first paragraph
+  let first_paragraph = case string.split(doc, on: "\r\n\r\n") {
+    [single] ->
+      case string.split(single, on: "\n\n") {
+        [first, ..] -> first
+        [] -> doc
+      }
+    [first, ..] -> first
+    [] -> doc
+  }
+
+  // Truncate to reasonable length (around 200 characters)
+  let truncated = case string.length(first_paragraph) > 200 {
+    True -> string.slice(first_paragraph, 0, 200) <> "..."
+    False -> first_paragraph
+  }
+
+  // Highlight search terms
+  case string.trim(search_input) {
+    "" -> truncated
+    search_term ->
+      string.replace(
+        truncated,
+        search_term,
+        "<strong>" <> search_term <> "</strong>",
+      )
+  }
 }

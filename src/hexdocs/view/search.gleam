@@ -316,8 +316,8 @@ pub fn search(model: Model) {
                         True -> "Found "
                         False ->
                           "Showing first "
-                          |> string.append(int.to_string(config.per_page()))
-                          |> string.append(" out of ")
+                          <> int.to_string(config.per_page())
+                          <> " out of "
                       }
                       |> string.append(int.to_string(count))
                       |> string.append(" results")
@@ -467,68 +467,38 @@ fn trash_button(filter: #(String, String)) {
   ])
 }
 
-fn result_card(model: Model, result: hexdocs.TypeSense) {
+fn result_card(model: Model, document: hexdocs.Document) {
+  let display_url =
+    "/" <> string.replace(document.package, "-", "/") <> "/" <> document.ref
+  let link_url = config.hexdocs_url() <> display_url
+
   html.div([class("w-full bg-slate-100 dark:bg-slate-800 rounded-2xl p-4")], [
-    html.div([class("text-slate-700 dark:text-slate-300 text-sm")], [
-      html.text(result.document.package),
-    ]),
-    html.h3(
+    html.a(
       [
+        attribute.href(link_url),
+        class("text-green-700 dark:text-green-400 text-sm hover:underline"),
+      ],
+      [html.text(display_url)],
+    ),
+    html.a(
+      [
+        attribute.href(link_url),
         class(
-          "text-slate-950 dark:text-slate-50 text-xl font-semibold leading-loose mt-1",
+          "text-blue-700 dark:text-blue-300 text-xl font-normal leading-tight mt-1 hover:underline block",
         ),
       ],
-      [html.text(result.document.title)],
+      [html.text(document.title)],
     ),
-    // element.unsafe_raw_html(
-    //   "",
-    //   "p",
-    //   [
-    //     class(
-    //       "mt-4 text-slate-800 dark:text-slate-300 leading-normal line-clamp-2 overflow-hidden",
-    //     ),
-    //   ],
-    //   result.document.doc,
-    // ),
-    html.div(
-      [
-        class(
-          "mt-2 inline-flex px-3 py-0.5 bg-slate-300 dark:bg-slate-700 rounded-full",
-        ),
-      ],
-      [
-        html.span([class("text-blue-600 dark:text-blue-400 text-sm")], [
-          html.text(result.document.ref),
-        ]),
-      ],
+    element.unsafe_raw_html(
+      "",
+      "p",
+      [class("text-slate-800 dark:text-slate-300 leading-normal mt-2")],
+      hexdocs.snippet(document.doc, model.search_input),
     ),
-    case result.highlight {
-      hexdocs.Highlights(doc: Some(doc), ..) -> {
-        element.unsafe_raw_html(
-          "",
-          "p",
-          [
-            class(
-              "mt-4 text-slate-800 dark:text-slate-300 leading-normal line-clamp-2 overflow-hidden",
-            ),
-          ],
-          doc.snippet,
-        )
-        // html.text("Channels are a really good abstraction"),
-        // html.span(
-        //   [class("bg-slate-950 text-slate-100 px-1 rounded")],
-        //   [html.text("for")],
-        // ),
-        // html.text(
-        //   "real-time communication. They are bi-directional and persistent connections between the browser and server...",
-        // )
-      }
-      _ -> element.none()
-    },
     html.div([class("mt-4 flex flex-wrap gap-3")], [
       html.button(
         [
-          event.on_click(msg.UserToggledPreview(result.document.id)),
+          event.on_click(msg.UserToggledPreview(document.id)),
           class(
             "h-10 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
           ),
@@ -541,35 +511,12 @@ fn result_card(model: Model, result: hexdocs.TypeSense) {
           card_icon("ri-arrow-down-s-line"),
         ],
       ),
-      case hex.go_to_link(result.document) {
-        Error(_) -> element.none()
-        Ok(link) ->
-          html.a(
-            [
-              attribute.href(link),
-              class(
-                "h-10 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
-              ),
-            ],
-            [
-              html.span(
-                [
-                  class(
-                    "text-slate-800 dark:text-slate-200 text-sm font-semibold",
-                  ),
-                ],
-                [html.text("Go to Page")],
-              ),
-              card_icon("ri-external-link-line"),
-            ],
-          )
-      },
     ]),
-    case dict.get(model.search_opened_previews, result.document.id) {
+    case dict.get(model.search_opened_previews, document.id) {
       Ok(False) | Error(_) -> element.none()
       Ok(True) -> {
         case
-          hex.preview_link(result.document, case model.dark_mode.mode {
+          hex.preview_link(document, case model.dark_mode.mode {
             msg.Dark -> "dark"
             msg.Light -> "light"
           })
@@ -581,7 +528,7 @@ fn result_card(model: Model, result: hexdocs.TypeSense) {
               [
                 iframe.iframe([
                   iframe.to(link),
-                  iframe.title(result.document.package),
+                  iframe.title(document.package),
                 ]),
               ],
             )

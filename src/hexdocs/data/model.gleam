@@ -59,7 +59,7 @@ pub type Model {
     autocomplete_search_focused: AutocompleteFocused,
     /// Keeps the results from TypeSense.
     /// `#(Page, List(Results))`.
-    search_result: Option(#(Int, List(hexdocs.TypeSense))),
+    search_result: Option(#(Int, List(hexdocs.Document))),
     /// Stores the current value of the search bar on top of the search page.
     search_input: String,
     /// Stores the current state of the different previews opened in
@@ -388,7 +388,7 @@ pub fn get_selected_package_filter_name(model: Model) {
 
 pub fn set_search_results(
   model: Model,
-  search_result: #(Int, List(hexdocs.TypeSense)),
+  search_result: #(Int, List(hexdocs.Document)),
 ) -> Model {
   let search_result = Some(search_result)
   Model(..model, search_result:)

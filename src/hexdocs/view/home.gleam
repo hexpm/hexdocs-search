@@ -6,6 +6,7 @@ import gleam/string
 import hexdocs/data/model.{type Model}
 import hexdocs/data/model/autocomplete
 import hexdocs/data/msg
+import hexdocs/view/components
 import hexdocs/view/home/footer
 import lustre/attribute.{class, id}
 import lustre/element
@@ -77,27 +78,24 @@ pub fn home(model: Model) {
                   ],
                   [
                     html.div([class("relative md:max-w-lg w-full")], [
-                      html.input([
-                        attribute.value(model.home_input_displayed),
-                        event.on_input(msg.UserEditedSearch),
-                        event.on_click(msg.None) |> event.stop_propagation,
-                        event.on_focus(msg.UserFocusedSearch),
-                        event.advanced("keydown", on_arrow_up_down(model)),
-                        attribute.autofocus(True),
-                        attribute.type_("text"),
-                        class("search-input w-full bg-white dark:bg-gray-800"),
-                        class(
-                          "rounded-lg border border-gray-200 dark:border-gray-700",
-                        ),
-                        class(
-                          "placeholder:text-gray-400 dark:placeholder:text-gray-400 text-gray-700 dark:text-gray-100",
-                        ),
-                        class("px-10 py-3"),
-                        class(
-                          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                        ),
-                        attribute.placeholder("Search for packages..."),
-                      ]),
+                      html.input(
+                        list.flatten([
+                          [
+                            attribute.value(model.home_input_displayed),
+                            event.on_input(msg.UserEditedSearch),
+                            event.on_click(msg.None) |> event.stop_propagation,
+                            event.on_focus(msg.UserFocusedSearch),
+                            event.advanced("keydown", on_arrow_up_down(model)),
+                            attribute.autofocus(True),
+                            attribute.type_("text"),
+                          ],
+                          components.input_classes(),
+                          [
+                            class("px-10 py-3"),
+                            attribute.placeholder("Search for packages..."),
+                          ],
+                        ]),
+                      ),
                       html.i(
                         [
                           class(

@@ -91,7 +91,8 @@ fn new_search_query_params(
 ) {
   list.new()
   |> list.key_set("q", query)
-  |> list.key_set("query_by", "title,doc")
+  |> list.key_set("query_by", "title,doc,type")
+  |> list.key_set("query_by_weights", "3,1,1")
   |> list.key_set("page", int.to_string(page))
   |> add_filter_by_packages_param(packages)
   |> uri.query_to_string

@@ -135,6 +135,7 @@ pub fn search(model: Model) {
                           model,
                           model.Package,
                           model.AutocompleteOnPackage,
+                          "min-w-70",
                         ),
                       ],
                     ),
@@ -173,6 +174,7 @@ pub fn search(model: Model) {
                           model,
                           model.Version,
                           model.AutocompleteOnVersion,
+                          "min-w-[120px]",
                         ),
                       ],
                     ),
@@ -336,6 +338,7 @@ fn autocomplete(
   model: Model,
   type_: model.Type,
   opened: model.AutocompleteFocused,
+  class_name: String,
 ) -> element.Element(msg.Msg) {
   let no_search = case type_ {
     model.Package -> string.is_empty(model.search_packages_filter_input)
@@ -351,8 +354,9 @@ fn autocomplete(
   html.div(
     [
       class(
-        "absolute z-10 top-14 w-full min-w-[120px] bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden",
+        "absolute z-10 top-14 w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden",
       ),
+      class(class_name),
     ],
     [
       case model.autocomplete {

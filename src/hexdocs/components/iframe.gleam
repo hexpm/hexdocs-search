@@ -3,7 +3,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/pair
 import hexdocs/components/attributes
 import lustre
-import lustre/attribute.{type Attribute, class}
+import lustre/attribute.{type Attribute}
 import lustre/component
 import lustre/effect.{type Effect}
 import lustre/element
@@ -80,17 +80,4 @@ fn view(model: Model) {
       ])
     }
   }
-}
-
-fn loading_state() {
-  html.div(
-    [
-      class(
-        "absolute text-slate-800 dark:text-slate-300 top-0 bg-transparent size-full flex items-center justify-center",
-      ),
-    ],
-    [
-      html.text("Loading"),
-    ],
-  )
 }

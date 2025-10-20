@@ -3,9 +3,7 @@ import lustre/element/html as h
 
 pub fn footer() {
   h.footer([], [
-    h.section([a.class("flex justify-end"), a.id("publishing-docs")], [
-      hint(),
-    ]),
+    h.section([a.class("flex justify-end"), a.id("publishing-docs")], [hint()]),
     h.section(
       [
         a.class("w-full"),
@@ -115,9 +113,7 @@ pub fn hint() {
               ],
               [h.text("here")],
             ),
-            h.span([a.class("text-gray-500 dark:text-gray-200")], [
-              h.text("."),
-            ]),
+            h.span([a.class("text-gray-500 dark:text-gray-200")], [h.text(".")]),
           ]),
           h.p([a.class("leading-tight mt-4")], [
             h.span(
@@ -135,9 +131,7 @@ pub fn hint() {
               ],
               [h.text("here")],
             ),
-            h.span([a.class("text-gray-500 dark:text-gray-200")], [
-              h.text("."),
-            ]),
+            h.span([a.class("text-gray-500 dark:text-gray-200")], [h.text(".")]),
           ]),
         ]),
       ],

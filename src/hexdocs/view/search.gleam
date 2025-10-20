@@ -252,6 +252,7 @@ pub fn search(model: Model) {
           html.div([class("w-full max-w-[800px] flex items-center gap-3")], [
             html.div([class("relative flex-1")], [
               html.input([
+                attribute.autofocus(True),
                 attribute.value(model.search_input),
                 event.on_input(msg.UserEditedSearchInput),
                 event.on("keydown", {
@@ -276,14 +277,6 @@ pub fn search(model: Model) {
                 [],
               ),
             ]),
-            // html.i(
-            //   [
-            //     class(
-            //       "ri-settings-4-line text-xl text-slate-700 dark:text-slate-300",
-            //     ),
-            //   ],
-            //   [],
-            // ),
             html.button(
               [class("p-2"), event.on_click(msg.UserToggledDarkMode)],
               [

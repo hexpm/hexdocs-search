@@ -231,8 +231,13 @@ pub fn update_route(model: Model, route: uri.Uri) {
   case route {
     route.Home | route.NotFound -> #(model, effect.none())
     route.Search(q:, packages:) -> {
-      Model(..model, search_input: q, search_packages_filters: packages)
-      |> pair.new(effects.typesense_search(q, packages))
+      case string.is_empty(q) {
+        True -> #(set_search_results(model, #(0, [])), effect.none())
+        False -> {
+          Model(..model, search_input: q, search_packages_filters: packages)
+          |> pair.new(effects.typesense_search(q, packages))
+        }
+      }
     }
   }
 }

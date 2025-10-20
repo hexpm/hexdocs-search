@@ -15,8 +15,15 @@ pub type Route {
 
 pub fn from_uri(location: Uri) -> Route {
   case uri.path_segments(location.path) {
-    [] -> Home
-    ["search"] -> search_from_uri(location)
+    [] ->
+      {
+        use query <- result.try(option.to_result(location.query, Nil))
+        use parsed_query <- result.try(uri.parse_query(query))
+        use _ <- result.try(list.key_find(parsed_query, "q"))
+        Ok(search_from_uri(location))
+      }
+      |> result.unwrap(Home)
+
     _ -> NotFound
   }
 }
@@ -26,7 +33,7 @@ pub fn to_uri(route: Route) -> Uri {
     Home -> uri.parse("/")
     NotFound -> uri.parse("/")
     Search(q:, packages:) -> {
-      use uri <- result.map(uri.parse("/search"))
+      use uri <- result.map(uri.parse("/"))
       let query = create_query([#("q", q)], packages)
       let query = uri.query_to_string(query)
       uri.Uri(..uri, query: Some(query))

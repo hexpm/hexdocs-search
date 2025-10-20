@@ -9,6 +9,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import gleam/uri
+import hexdocs/config
 import hexdocs/endpoints
 import hexdocs/loss
 
@@ -94,6 +95,7 @@ fn new_search_query_params(
   |> list.key_set("query_by", "title,doc,type")
   |> list.key_set("query_by_weights", "3,1,1")
   |> list.key_set("page", int.to_string(page))
+  |> list.key_set("per_page", int.to_string(config.per_page()))
   |> add_filter_by_packages_param(packages)
   |> uri.query_to_string
 }

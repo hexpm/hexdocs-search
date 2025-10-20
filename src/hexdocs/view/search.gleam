@@ -1,10 +1,12 @@
 import gleam/bool
 import gleam/dict
 import gleam/dynamic/decode
+import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
 import hexdocs/components/iframe
+import hexdocs/config
 import hexdocs/data/model.{type Model}
 import hexdocs/data/model/autocomplete
 import hexdocs/data/msg
@@ -247,8 +249,8 @@ pub fn search(model: Model) {
           ]),
         ],
       ),
-      html.div([class("flex-1 md:ml-0 mt-0 md:mt-0")], [
-        html.div([class("p-5 flex flex-col items-center")], [
+      html.div([class("px-5 my-5 flex-1")], [
+        html.div([class("flex flex-col items-center")], [
           html.div([class("w-full max-w-[800px] flex items-center gap-3")], [
             html.div([class("relative flex-1")], [
               html.input([
@@ -296,13 +298,52 @@ pub fn search(model: Model) {
             ),
           ]),
         ]),
-        html.div([class("px-5 flex flex-col items-center")], [
-          html.div([class("space-y-6 w-full max-w-[800px]")], {
-            let results = option.unwrap(model.search_result, #(0, []))
-            use result <- list.map(results.1)
-            result_card(model, result)
-          }),
-        ]),
+        html.div([class("flex flex-col mx-auto max-w-[800px]")], {
+          case string.is_empty(model.search_input) {
+            True -> []
+            False -> {
+              let #(count, results) =
+                option.unwrap(model.search_result, #(0, []))
+              [
+                html.div(
+                  [
+                    class("py-4 text-slate-700 dark:text-slate-300"),
+                    class("flex flex-row justify-between"),
+                  ],
+                  [
+                    html.div([], [
+                      case count <= config.per_page() {
+                        True -> "Found "
+                        False ->
+                          "Showing first "
+                          |> string.append(int.to_string(config.per_page()))
+                          |> string.append(" out of ")
+                      }
+                      |> string.append(int.to_string(count))
+                      |> string.append(" results")
+                      |> html.text(),
+                    ]),
+                    html.div([class("text-sm")], [
+                      html.text("Search powered by "),
+                      html.a(
+                        [
+                          class("text-blue-600"),
+                          attribute.href("https://typesense.org"),
+                        ],
+                        [
+                          html.text("TypeSense"),
+                        ],
+                      ),
+                    ]),
+                  ],
+                ),
+                html.div([class("space-y-6")], {
+                  list.map(results, result_card(model, _))
+                }),
+              ]
+            }
+          }
+        }),
       ]),
     ]),
   ])

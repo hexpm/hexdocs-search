@@ -12,6 +12,7 @@ import hexdocs/data/model/autocomplete
 import hexdocs/data/msg
 import hexdocs/services/hex
 import hexdocs/services/hexdocs
+import hexdocs/view/components
 import lustre/attribute.{class}
 import lustre/element
 import lustre/element/html
@@ -107,24 +108,29 @@ pub fn search(model: Model) {
                         ),
                       ],
                       [
-                        html.input([
-                          attribute.id("search-package-input"),
-                          class(
-                            "search-input w-full h-10 bg-transparent px-10 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500",
-                          ),
-                          attribute.placeholder("Package Name"),
-                          attribute.type_("text"),
-                          attribute.value(
-                            model.search_packages_filter_input_displayed,
-                          ),
-                          event.on_input(msg.UserEditedPackagesFilterInput),
-                          event.on_focus(msg.UserFocusedPackagesFilterInput),
-                          event.on_click(msg.None) |> event.stop_propagation,
-                          event.advanced(
-                            "keydown",
-                            on_arrow_up_down(model.Package),
-                          ),
-                        ]),
+                        html.input(
+                          list.flatten([
+                            [
+                              attribute.id("search-package-input"),
+                              attribute.placeholder("Package Name"),
+                              attribute.type_("text"),
+                              attribute.value(
+                                model.search_packages_filter_input_displayed,
+                              ),
+                              event.on_input(msg.UserEditedPackagesFilterInput),
+                              event.on_focus(msg.UserFocusedPackagesFilterInput),
+                              event.on_click(msg.None) |> event.stop_propagation,
+                              event.advanced(
+                                "keydown",
+                                on_arrow_up_down(model.Package),
+                              ),
+                            ],
+                            components.input_classes(),
+                            [
+                              class("h-10 px-10 text-sm"),
+                            ],
+                          ]),
+                        ),
                         html.i(
                           [
                             class(
@@ -148,30 +154,40 @@ pub fn search(model: Model) {
                         ),
                       ],
                       [
-                        html.input([
-                          attribute.id("search-version-input"),
-                          class(
-                            "search-input w-full h-10 bg-transparent px-2 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-[0.2]",
-                          ),
-                          attribute.placeholder("ver"),
-                          attribute.type_("text"),
-                          attribute.value(
-                            model.search_packages_filter_version_input_displayed,
-                          ),
-                          attribute.disabled(
-                            !list.contains(
-                              model.packages,
-                              model.search_packages_filter_input_displayed,
-                            ),
-                          ),
-                          event.on_input(msg.UserEditedPackagesFilterVersion),
-                          event.on_focus(msg.UserFocusedPackagesFilterVersion),
-                          event.on_click(msg.None) |> event.stop_propagation,
-                          event.advanced(
-                            "keydown",
-                            on_arrow_up_down(model.Version),
-                          ),
-                        ]),
+                        html.input(
+                          list.flatten([
+                            [
+                              attribute.id("search-version-input"),
+                              attribute.placeholder("ver"),
+                              attribute.type_("text"),
+                              attribute.value(
+                                model.search_packages_filter_version_input_displayed,
+                              ),
+                              attribute.disabled(
+                                !list.contains(
+                                  model.packages,
+                                  model.search_packages_filter_input_displayed,
+                                ),
+                              ),
+                              event.on_input(
+                                msg.UserEditedPackagesFilterVersion,
+                              ),
+                              event.on_focus(
+                                msg.UserFocusedPackagesFilterVersion,
+                              ),
+                              event.on_click(msg.None) |> event.stop_propagation,
+                              event.advanced(
+                                "keydown",
+                                on_arrow_up_down(model.Version),
+                              ),
+                            ],
+                            components.input_classes(),
+                            [
+                              class("h-10 px-2 text-sm"),
+                              class("disabled:opacity-[0.7]"),
+                            ],
+                          ]),
+                        ),
                         autocomplete(
                           model,
                           model.Version,
@@ -253,23 +269,26 @@ pub fn search(model: Model) {
         html.div([class("flex flex-col items-center")], [
           html.div([class("w-full max-w-[800px] flex items-center gap-3")], [
             html.div([class("relative flex-1")], [
-              html.input([
-                attribute.autofocus(True),
-                attribute.value(model.search_input),
-                event.on_input(msg.UserEditedSearchInput),
-                event.on("keydown", {
-                  use key <- decode.field("key", decode.string)
-                  case key {
-                    "Enter" -> decode.success(msg.UserSubmittedSearchInput)
-                    _ -> decode.failure(msg.UserSubmittedSearchInput, "Key")
-                  }
-                }),
-                attribute.placeholder("Search for packages..."),
-                class(
-                  "search-input w-full h-10 bg-indigo-50 dark:bg-slate-800 rounded-lg border border-blue-500 dark:border-blue-600 pl-10 pr-4 text-slate-950 dark:text-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500",
-                ),
-                attribute.type_("text"),
-              ]),
+              html.input(
+                list.flatten([
+                  [
+                    attribute.autofocus(True),
+                    attribute.value(model.search_input),
+                    event.on_input(msg.UserEditedSearchInput),
+                    event.on("keydown", {
+                      use key <- decode.field("key", decode.string)
+                      case key {
+                        "Enter" -> decode.success(msg.UserSubmittedSearchInput)
+                        _ -> decode.failure(msg.UserSubmittedSearchInput, "Key")
+                      }
+                    }),
+                    attribute.placeholder("Search for packages..."),
+                    attribute.type_("text"),
+                  ],
+                  components.input_classes(),
+                  [class("h-10 pl-10 pr-4")],
+                ]),
+              ),
               html.i(
                 [
                   class(

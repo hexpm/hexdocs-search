@@ -232,7 +232,7 @@ pub fn update_route(model: Model, route: uri.Uri) {
     route.Home | route.NotFound -> #(model, effect.none())
     route.Search(q:, packages:) -> {
       case string.is_empty(q) {
-        True -> #(set_search_results(model, #(0, [])), effect.none())
+        True -> #(set_search_results(model, #(-1, [])), effect.none())
         False -> {
           Model(..model, search_input: q, search_packages_filters: packages)
           |> pair.new(effects.typesense_search(q, packages))

@@ -299,11 +299,11 @@ pub fn search(model: Model) {
           ]),
         ]),
         html.div([class("flex flex-col mx-auto max-w-[800px]")], {
-          case string.is_empty(model.search_input) {
+          let #(count, results) = option.unwrap(model.search_result, #(-1, []))
+
+          case count == -1 {
             True -> []
             False -> {
-              let #(count, results) =
-                option.unwrap(model.search_result, #(0, []))
               [
                 html.div(
                   [

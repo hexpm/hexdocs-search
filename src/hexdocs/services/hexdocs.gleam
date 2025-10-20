@@ -180,14 +180,20 @@ fn add_filter_by_packages_param(
 }
 
 pub fn snippet(doc: String, search_input: String) -> String {
-  // Extract first paragraph
-  let first_paragraph = case string.split(doc, on: "\r\n\r\n") {
-    [single] ->
-      case string.split(single, on: "\n\n") {
-        [first, ..] -> first
-        [] -> doc
+  // Extract all paragraphs by splitting on both possible line endings
+  let paragraphs =
+    doc
+    |> string.split(on: "\r\n\r\n")
+    |> list.flat_map(string.split(_, on: "\n\n"))
+
+  // Get first usable paragraph (skip if starts with "#")
+  let first_paragraph = case paragraphs {
+    [first, second, ..] ->
+      case string.starts_with(string.trim(first), "#") {
+        True -> second
+        False -> first
       }
-    [first, ..] -> first
+    [first] -> first
     [] -> doc
   }
 

@@ -62,10 +62,6 @@ pub type Model {
     search_result: Option(#(Int, List(hexdocs.Document))),
     /// Stores the current value of the search bar on top of the search page.
     search_input: String,
-    /// Stores the current state of the different previews opened in
-    /// the search results, in the search page. An item missing from the
-    /// `Dict` indicates a preview _not_ openend.
-    search_opened_previews: Dict(String, Bool),
     /// Stores the current value of the packages filter input on
     /// left of the search page.
     search_packages_filter_input: String,
@@ -107,7 +103,6 @@ pub fn new(dark_mode: msg.ColorSetting) -> Model {
     autocomplete_search_focused: AutocompleteClosed,
     search_result: None,
     search_input: "",
-    search_opened_previews: dict.new(),
     search_packages_filter_input: "",
     search_packages_filter_input_displayed: "",
     search_packages_filter_version_input: "",

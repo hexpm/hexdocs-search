@@ -1,16 +1,16 @@
 import gleam/bool
-import gleam/dict
+
 import gleam/dynamic/decode
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
-import hexdocs/components/iframe
+
 import hexdocs/config
 import hexdocs/data/model.{type Model}
 import hexdocs/data/model/autocomplete
 import hexdocs/data/msg
-import hexdocs/services/hex
+
 import hexdocs/services/hexdocs
 import lustre/attribute.{class}
 import lustre/element
@@ -534,58 +534,11 @@ fn result_card(model: Model, document: hexdocs.Document) {
           }),
         ])
     },
-    html.div([class("mt-4 flex flex-wrap gap-3")], [
-      html.button(
-        [
-          event.on_click(msg.UserToggledPreview(document.id)),
-          class(
-            "h-10 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 flex items-center justify-center",
-          ),
-        ],
-        [
-          html.span(
-            [class("text-slate-800 dark:text-slate-200 text-sm font-semibold")],
-            [html.text("Show Preview")],
-          ),
-          card_icon("ri-arrow-down-s-line"),
-        ],
-      ),
-    ]),
-    case dict.get(model.search_opened_previews, document.id) {
-      Ok(False) | Error(_) -> element.none()
-      Ok(True) -> {
-        case
-          hex.preview_link(document, case model.dark_mode.mode {
-            msg.Dark -> "dark"
-            msg.Light -> "light"
-          })
-        {
-          Error(_) -> element.none()
-          Ok(link) -> {
-            html.div(
-              [class("px-4 bg-white dark:bg-gray-950 h-full rounded-lg")],
-              [
-                iframe.iframe([
-                  iframe.to(link),
-                  iframe.title(document.package),
-                ]),
-              ],
-            )
-          }
-        }
-      }
-    },
   ])
 }
 
 fn sidebar_icon(icon: String) {
   let icon = class(icon)
   let default = class("text-slate-400 dark:text-slate-500")
-  html.i([icon, default], [])
-}
-
-fn card_icon(icon: String) {
-  let icon = class(icon)
-  let default = class("ml-2 text-slate-500 dark:text-slate-400")
   html.i([icon, default], [])
 }

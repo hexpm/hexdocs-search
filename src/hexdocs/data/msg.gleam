@@ -41,7 +41,6 @@ pub type Msg {
   UserSelectedPackageFilterVersion
   UserSubmittedPackagesFilter
   UserSubmittedSearchInput
-  UserToggledPreview(id: String)
   UserClickedShare
 
   // Neutral element, because we need to call `stop_propagation` conditionnally.

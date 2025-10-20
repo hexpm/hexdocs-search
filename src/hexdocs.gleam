@@ -9,7 +9,7 @@ import gleam/result
 import gleam/string
 import grille_pain
 import grille_pain/lustre/toast
-import hexdocs/components/iframe
+
 import hexdocs/data/model.{type Model, Model}
 import hexdocs/data/model/autocomplete
 import hexdocs/data/model/route
@@ -27,7 +27,6 @@ import modem
 
 pub fn main() {
   let flags = Nil
-  let assert Ok(_) = iframe.register()
   let assert Ok(_) = grille_pain.simple()
   lustre.application(setup.init, update, view)
   |> lustre.start("#app", flags)
@@ -93,7 +92,7 @@ fn update(model: Model, msg: Msg) {
       user_focused_packages_filter_input(model)
     msg.UserFocusedPackagesFilterVersion ->
       user_focused_packages_filter_version_input(model)
-    msg.UserToggledPreview(id) -> user_toggled_preview(model, id)
+
     msg.UserSelectedPackageFilter -> user_selected_package_filter(model)
     msg.UserSelectedPackageFilterVersion ->
       user_selected_package_filter_version(model)
@@ -345,15 +344,6 @@ fn user_focused_packages_filter_version_input(
   let #(model, effect) = model.focus_packages_filter_version_search(model)
   let effects = effect.batch([effects.subscribe_blurred_search(), effect])
   #(model, effects)
-}
-
-fn user_toggled_preview(model: Model, id: String) {
-  Model(..model, search_opened_previews: {
-    use opened <- dict.upsert(model.search_opened_previews, id)
-    let opened = option.unwrap(opened, False)
-    !opened
-  })
-  |> pair.new(effect.none())
 }
 
 fn user_selected_package_filter(model: Model) {

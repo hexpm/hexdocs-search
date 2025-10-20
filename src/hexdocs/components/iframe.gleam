@@ -55,7 +55,7 @@ fn init(_) {
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(msg)) {
-  case echo msg {
+  case msg {
     UserChangedTitle(title) -> #(Model(..model, title:), effect.none())
     IFrameStateChanged(state) -> #(Model(..model, state:), effect.none())
     UserChangedTo(to) -> #(

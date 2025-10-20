@@ -495,6 +495,45 @@ fn result_card(model: Model, document: hexdocs.Document) {
       [class("text-slate-800 dark:text-slate-300 leading-normal mt-2")],
       hexdocs.snippet(document.doc, model.search_input),
     ),
+    case list.is_empty(document.headers) {
+      True -> element.none()
+      False ->
+        html.div([class("mt-4 space-y-3")], [
+          html.h4(
+            [class("text-slate-600 dark:text-slate-400 text-sm font-medium")],
+            [html.text("Related sections:")],
+          ),
+          html.ul([class("space-y-1")], {
+            list.map(document.headers, fn(header: hexdocs.Header) {
+              let header_display_url =
+                "/"
+                <> string.replace(document.package, "-", "/")
+                <> "/"
+                <> header.ref
+              let header_link_url = config.hexdocs_url() <> header_display_url
+
+              html.li(
+                [
+                  class(
+                    "list-disc list-inside text-slate-400 dark:text-slate-500",
+                  ),
+                ],
+                [
+                  html.a(
+                    [
+                      attribute.href(header_link_url),
+                      class(
+                        "text-blue-600 dark:text-blue-400 text-sm hover:underline",
+                      ),
+                    ],
+                    [html.text(header.title)],
+                  ),
+                ],
+              )
+            })
+          }),
+        ])
+    },
     html.div([class("mt-4 flex flex-wrap gap-3")], [
       html.button(
         [

@@ -11,5 +11,5 @@ pub fn hexpm_url() -> String {
 }
 
 pub fn per_page() -> Int {
-  20
+  25
 }

@@ -157,8 +157,8 @@ fn new_search_query_params(
 ) {
   list.new()
   |> list.key_set("q", query)
-  |> list.key_set("query_by", "title,doc,type")
-  |> list.key_set("query_by_weights", "3,1,1")
+  |> list.key_set("query_by", "title,doc")
+  |> list.key_set("query_by_weights", "3,1")
   |> list.key_set("page", int.to_string(page))
   // We multiply per 2 because we group results
   |> list.key_set("per_page", int.to_string(config.per_page() * 2))

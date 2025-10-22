@@ -298,23 +298,7 @@ pub fn search(model: Model) {
                 [],
               ),
             ]),
-            html.button(
-              [class("p-2"), event.on_click(msg.UserToggledDarkMode)],
-              [
-                html.i(
-                  [
-                    class(
-                      "theme-icon text-xl text-slate-700 dark:text-slate-300",
-                    ),
-                    class(case model.dark_mode.mode {
-                      msg.Dark -> "ri-sun-line"
-                      msg.Light -> "ri-moon-line"
-                    }),
-                  ],
-                  [],
-                ),
-              ],
-            ),
+            components.dark_mode_toggle(model),
           ]),
         ]),
         html.div([class("flex flex-col mx-auto max-w-[800px]")], {

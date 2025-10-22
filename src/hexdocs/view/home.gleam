@@ -14,7 +14,6 @@ import lustre/element/html
 import lustre/event
 
 pub fn home(model: Model) {
-  let toggle_mode = event.on_click(msg.UserToggledDarkMode)
   html.div([class("bg-white dark:bg-gray-900")], [
     html.div(
       [
@@ -28,22 +27,19 @@ pub fn home(model: Model) {
       [
         html.main([class("grow")], [
           html.section([], [
-            html.div([id("nav"), class("flex justify-between items-center")], [
-              html.a(
-                [
-                  attribute.href("https://hex.pm/"),
-                  class("text-sm text-gray-600 dark:text-gray-100"),
-                ],
-                [html.text("← Go back to Hex")],
-              ),
-              html.button(
-                [
-                  toggle_mode,
-                  class("p-3 text-gray-700 dark:text-gray-100 mt-10"),
-                ],
-                [html.i([class("theme-icon text-xl")], [])],
-              ),
-            ]),
+            html.div(
+              [id("nav"), class("flex justify-between items-center mt-2")],
+              [
+                html.a(
+                  [
+                    attribute.href("https://hex.pm/"),
+                    class("text-sm text-gray-600 dark:text-gray-100"),
+                  ],
+                  [html.text("← Go back to Hex")],
+                ),
+                html.div([], [components.dark_mode_toggle(model)]),
+              ],
+            ),
             html.div(
               [class("flex flex-col justify-around mt-14 md:mt-26 lg:mt-40")],
               [

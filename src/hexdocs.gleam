@@ -49,6 +49,8 @@ fn update(model: Model, msg: Msg) {
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
     msg.ApiReturnedTypesenseSearch(response) ->
       api_returned_typesense_search(model, response)
+    msg.ApiReturnedInitialLatestPackages(versions) ->
+      api_returned_initial_latest_packages(model, versions)
 
     msg.DocumentChangedLocation(location:) ->
       model.update_route(model, location)
@@ -159,6 +161,18 @@ fn api_returned_typesense_search(model: Model, response: Loss(decode.Dynamic)) {
   |> result.map(model.set_search_results(model, _))
   |> result.map(pair.new(_, effect.none()))
   |> result.unwrap(#(model, effect.none()))
+}
+
+fn api_returned_initial_latest_packages(
+  model: Model,
+  versions: Loss(List(hexpm.Package)),
+) -> #(Model, Effect(a)) {
+  case versions {
+    Error(_) -> #(model, toast.error("Server error. Retry later."))
+    Ok(versions) ->
+      model.add_packages_versions(model, versions)
+      |> model.replace_search_packages
+  }
 }
 
 fn document_registered_event_listener(model: Model, unsubscriber: fn() -> Nil) {

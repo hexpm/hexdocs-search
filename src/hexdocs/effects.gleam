@@ -2,6 +2,8 @@ import browser/document
 import gleam/function
 import gleam/http/response.{type Response}
 import gleam/javascript/promise
+import gleam/list
+import gleam/result
 import hexdocs/data/msg
 import hexdocs/loss.{type Loss}
 import hexdocs/services/hex
@@ -22,6 +24,27 @@ pub fn package_versions(package: String) {
   use response <- promise.map(hex.package_versions(package))
   let response = response_to_loss(response)
   dispatch(msg.ApiReturnedPackageVersions(response:))
+}
+
+pub fn initial_latest_packages(packages: List(String)) {
+  use dispatch <- effect.from()
+  use _ <- function.tap(Nil)
+  use response <- promise.map({
+    promise.await_list({
+      use package <- list.map(packages)
+      hex.package_versions(package)
+    })
+  })
+  let versions = case result.all(response) {
+    Error(error) -> Error(error)
+    Ok(response) -> {
+      case list.any(response, fn(r) { r.status != 200 }) {
+        True -> Error(loss.HttpError)
+        False -> Ok(list.map(response, fn(r) { r.body }))
+      }
+    }
+  }
+  dispatch(msg.ApiReturnedInitialLatestPackages(versions:))
 }
 
 pub fn subscribe_blurred_search() {

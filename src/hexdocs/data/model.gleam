@@ -229,12 +229,42 @@ pub fn update_route(model: Model, route: uri.Uri) {
       case string.is_empty(q) {
         True -> #(set_search_results(model, #(-1, [])), effect.none())
         False -> {
+          let latest = list.filter(packages, fn(p) { p.1 == "latest" })
           Model(..model, search_input: q, search_packages_filters: packages)
-          |> pair.new(effects.typesense_search(q, packages))
+          |> pair.new({
+            case latest {
+              [] -> effects.typesense_search(q, packages)
+              latest -> {
+                latest
+                |> list.map(pair.first)
+                |> effects.initial_latest_packages
+              }
+            }
+          })
         }
       }
     }
   }
+}
+
+pub fn replace_search_packages(model: Model) {
+  let model =
+    Model(..model, search_packages_filters: {
+      use #(package, version) <- list.map(model.search_packages_filters)
+      use <- bool.guard(when: version != "latest", return: #(package, version))
+      case dict.get(model.packages_versions, package) {
+        Error(_) -> #(package, version)
+        Ok(versions) -> {
+          case versions.releases {
+            [] -> #(package, version)
+            [release, ..] -> #(package, release.version)
+          }
+        }
+      }
+    })
+  route.Search(q: model.search_input, packages: model.search_packages_filters)
+  |> route.replace
+  |> pair.new(model, _)
 }
 
 pub fn select_autocomplete_option(model: Model, package: String) {

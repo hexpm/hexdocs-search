@@ -24,7 +24,7 @@ pub fn search(model: Model) {
     html.div(
       [
         class(
-          "fixed top-[28px] right-4 z-50 flex-col items-end gap-4 hidden 2xl:flex dark:text-white",
+          "fixed top-[22px] right-4 z-50 flex-col items-end gap-4 hidden 2xl:flex dark:text-white",
         ),
       ],
       [hexdocs_logo()],
@@ -69,8 +69,8 @@ pub fn search(model: Model) {
           attribute.id("sidebar"),
         ],
         [
-          html.div([class("p-5")], [
-            html.div([class("flex justify-between items-center md:mt-2")], [
+          html.div([class("px-5 py-4.5 md:py-5.5")], [
+            html.div([class("flex justify-between items-center")], [
               html.h2(
                 [
                   class(
@@ -285,7 +285,7 @@ pub fn search(model: Model) {
           ]),
         ],
       ),
-      html.div([class("px-5 my-5 flex-1")], [
+      html.div([class("px-5 my-4 flex-1")], [
         html.div([class("flex flex-col items-center")], [
           html.div([class("w-full max-w-[800px] flex items-center gap-3")], [
             html.div([class("relative flex-1")], [

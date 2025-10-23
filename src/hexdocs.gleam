@@ -147,6 +147,9 @@ fn api_returned_packages(
     Ok(packages) ->
       packages
       |> string.split(on: "\n")
+      |> list.map(fn(p) {
+        string.split(p, on: ",") |> list.first() |> result.unwrap("")
+      })
       |> model.add_packages(model, _)
       |> pair.new(effect.none())
   }

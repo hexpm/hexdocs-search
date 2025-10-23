@@ -334,11 +334,11 @@ pub fn search(model: Model) {
                       html.text("Search powered by "),
                       html.a(
                         [
-                          class("text-blue-600"),
+                          class("text-blue-600 cursor-pointer"),
                           attribute.href("https://typesense.org"),
                         ],
                         [
-                          html.text("TypeSense"),
+                          html.text("Typesense"),
                         ],
                       ),
                     ]),

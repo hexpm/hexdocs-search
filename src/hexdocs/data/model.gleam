@@ -57,7 +57,7 @@ pub type Model {
     autocomplete: Option(#(Type, Autocomplete)),
     /// Whether the autocomplete is focused, or not.
     autocomplete_search_focused: AutocompleteFocused,
-    /// Keeps the results from TypeSense.
+    /// Keeps the results from Typesense.
     /// `#(Page, List(Results))`.
     search_result: Option(#(Int, List(hexdocs.Document))),
     /// Stores the current value of the search bar on top of the search page.

@@ -48,9 +48,15 @@ pub fn footer() {
         ]),
         h.div([a.class("text-gray-600 dark:text-gray-200")], [
           h.text("Search powered by "),
-          h.a([a.class("text-blue-600"), a.href("https://typesense.org")], [
-            h.text("Typesense"),
-          ]),
+          h.a(
+            [
+              a.class("text-blue-600 cursor-pointer"),
+              a.href("https://typesense.org"),
+            ],
+            [
+              h.text("Typesense"),
+            ],
+          ),
         ]),
       ],
     ),

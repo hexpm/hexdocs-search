@@ -238,29 +238,51 @@ pub fn update_route(model: Model, route: uri.Uri) {
     route.Home | route.NotFound -> #(model, effect.none())
     route.Search(q:, packages:) -> {
       let packages = {
-        use #(package, version) <- list.map(packages)
+        use #(package, ver) <- list.map(packages)
         use <- bool.guard(
-          when: version != "latest",
-          return: version.Package(package, version, resolved: True),
+          when: ver != "latest",
+          return: version.Package(
+            name: package,
+            version: ver,
+            status: version.Found(ver),
+          ),
         )
         case dict.get(model.packages_versions, package) {
           // We didn't index it yet
-          Error(_) -> version.Package(package, version, resolved: False)
+          Error(_) ->
+            version.Package(
+              name: package,
+              version: ver,
+              status: version.Loading,
+            )
           // We tried but we could not find it
-          Ok(None) -> version.Package(package, version, resolved: True)
+          Ok(None) ->
+            version.Package(
+              name: package,
+              version: ver,
+              status: version.NotFound,
+            )
           // We found the packages
           Ok(Some(hex_package)) -> {
             case hex_package.releases {
-              [] -> version.Package(package, version, resolved: True)
+              [] ->
+                version.Package(
+                  name: package,
+                  version: ver,
+                  status: version.NotFound,
+                )
               [release, ..] ->
-                version.Package(package, release.version, resolved: True)
+                version.Package(
+                  name: package,
+                  version: ver,
+                  status: version.Found(release.version),
+                )
             }
           }
         }
       }
 
-      let latest =
-        list.filter(packages, fn(p) { p.version == "latest" && !p.resolved })
+      let latest = list.filter(packages, fn(p) { p.status == version.Loading })
 
       let model =
         Model(..model, search_input: q, search_packages_filters: packages)
@@ -417,9 +439,13 @@ fn extract_packages_filters_or_fetches(model: Model) {
     let is_existing_package = list.contains(model.packages, package)
     use <- bool.guard(when: !is_existing_package, return: acc)
     case version {
-      Some(version) -> #(
+      Some(ver) -> #(
         [
-          version.Package(name: package, version: version, resolved: True),
+          version.Package(
+            name: package,
+            version: ver,
+            status: version.Found(ver),
+          ),
           ..filters
         ],
         packages_to_fetch,
@@ -436,7 +462,11 @@ fn extract_packages_filters_or_fetches(model: Model) {
                 let ver = release.version
                 #(
                   [
-                    version.Package(name: package, version: ver, resolved: True),
+                    version.Package(
+                      name: package,
+                      version: ver,
+                      status: version.Found(ver),
+                    ),
                     ..filters
                   ],
                   packages_to_fetch,

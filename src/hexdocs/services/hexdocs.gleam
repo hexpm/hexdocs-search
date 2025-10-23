@@ -174,8 +174,12 @@ fn add_filter_by_packages_param(
 ) -> List(#(String, String)) {
   use <- bool.guard(when: list.is_empty(packages), return: query)
   packages
-  |> list.filter(fn(p) { p.resolved })
-  |> list.map(fn(p) { p.name <> "-" <> p.version })
+  |> list.filter_map(fn(p) {
+    case p.status {
+      version.Found(ver) -> Ok(p.name <> "-" <> ver)
+      _ -> Error(Nil)
+    }
+  })
   |> list.map(string.append("package:=", _))
   |> string.join("||")
   |> list.key_set(query, "filter_by", _)

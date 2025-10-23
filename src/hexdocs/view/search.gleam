@@ -235,7 +235,11 @@ pub fn search(model: Model) {
                   use filter <- list.map(sorted_filters)
                   html.div([class("flex justify-between items-center mt-4")], [
                     html.div(
-                      [class("inline-flex flex-col justify-start items-start")],
+                      [
+                        class(
+                          "inline-flex flex-col justify-start items-start gap-1",
+                        ),
+                      ],
                       [
                         html.div(
                           [
@@ -251,14 +255,24 @@ pub fn search(model: Model) {
                               "self-stretch justify-start text-slate-700 dark:text-slate-400 text-sm font-normal leading-none",
                             ),
                           ],
-                          // You can add any loader you want here.
-                          case filter.version {
-                            "latest" ->
-                              case filter.resolved {
-                                True -> [html.text("Loading…")]
-                                False -> [html.text("Not found")]
+                          case filter.status {
+                            version.Loading -> [
+                              html.text("latest (loading…)"),
+                            ]
+
+                            version.NotFound -> [
+                              html.text("latest "),
+                              html.span([class("text-red-700")], [
+                                html.text("(not found)"),
+                              ]),
+                            ]
+                            version.Found(ver) ->
+                              case filter.version {
+                                "latest" -> [
+                                  html.text("latest (" <> ver <> ")"),
+                                ]
+                                _ -> [html.text(ver)]
                               }
-                            version -> [html.text(version)]
                           },
                         ),
                       ],

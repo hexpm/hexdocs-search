@@ -314,7 +314,13 @@ fn user_submitted_packages_filter(model: Model) {
   model.find_matching_package_version(model, package, version)
   |> result.map(fn(_) {
     let search_packages_filters =
-      [version.Package(name: package, version: version, resolved: True)]
+      [
+        version.Package(
+          name: package,
+          version: version,
+          status: version.Found(version),
+        ),
+      ]
       |> list.append(model.search_packages_filters, _)
       |> list.unique
 

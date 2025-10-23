@@ -3,9 +3,16 @@ import gleam/regexp
 
 const input_regexp = "^#(\\w+)(:([0-9]+\\.[\\w+.-]+))?"
 
+/// Status of a package version resolution.
+pub type Status {
+  Loading
+  NotFound
+  Found(String)
+}
+
 /// Represents a package filter with its name, version, and resolution status.
 pub type Package {
-  Package(name: String, version: String, resolved: Bool)
+  Package(name: String, version: String, status: Status)
 }
 
 pub fn input_match_package(

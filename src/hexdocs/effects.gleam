@@ -45,7 +45,7 @@ pub fn initial_latest_packages(packages: List(String)) {
       }
     }
   }
-  dispatch(msg.ApiReturnedInitialLatestPackages(versions:))
+  dispatch(msg.ApiReturnedInitialLatestPackages(packages:, versions:))
 }
 
 pub fn subscribe_blurred_search() {

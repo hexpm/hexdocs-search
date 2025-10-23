@@ -10,7 +10,10 @@ pub type Msg {
   ApiReturnedPackages(Loss(String))
   ApiReturnedTypesenseSearch(Loss(Dynamic))
   ApiReturnedPackagesVersions(packages: Loss(List(hexpm.Package)))
-  ApiReturnedInitialLatestPackages(versions: Loss(List(hexpm.Package)))
+  ApiReturnedInitialLatestPackages(
+    packages: List(String),
+    versions: Loss(List(hexpm.Package)),
+  )
 
   // Application messages.
   DocumentChangedLocation(location: uri.Uri)

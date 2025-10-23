@@ -50,8 +50,8 @@ fn update(model: Model, msg: Msg) {
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
     msg.ApiReturnedTypesenseSearch(response) ->
       api_returned_typesense_search(model, response)
-    msg.ApiReturnedInitialLatestPackages(versions) ->
-      api_returned_initial_latest_packages(model, versions)
+    msg.ApiReturnedInitialLatestPackages(packages, versions) ->
+      api_returned_initial_latest_packages(model, packages, versions)
 
     msg.DocumentChangedLocation(location:) ->
       model.update_route(model, location)
@@ -166,14 +166,14 @@ fn api_returned_typesense_search(model: Model, response: Loss(decode.Dynamic)) {
 
 fn api_returned_initial_latest_packages(
   model: Model,
+  packages: List(String),
   versions: Loss(List(hexpm.Package)),
-) -> #(Model, Effect(a)) {
+) {
   case versions {
-    Error(_) -> model.replace_search_packages(model)
-    Ok(versions) ->
-      model.add_packages_versions(model, versions)
-      |> model.replace_search_packages
+    Error(_) -> model.add_missing_packages(model, packages)
+    Ok(versions) -> model.add_packages_versions(model, versions)
   }
+  |> model.replace_search_packages
 }
 
 fn document_registered_event_listener(model: Model, unsubscriber: fn() -> Nil) {
@@ -310,10 +310,8 @@ fn user_clicked_go_back(model: Model) -> #(Model, Effect(msg)) {
 fn user_submitted_packages_filter(model: Model) {
   let package = model.search_packages_filter_input
   let version = model.search_packages_filter_version_input
-  model.packages_versions
-  |> dict.get(package)
-  |> result.map(fn(package) { package.releases })
-  |> result.try(list.find(_, fn(r) { r.version == version }))
+
+  model.find_matching_package_version(model, package, version)
   |> result.map(fn(_) {
     let search_packages_filters =
       [version.Package(name: package, version: version, resolved: True)]
@@ -371,7 +369,12 @@ fn user_selected_package_filter_version(model: Model) {
   let releases =
     model.packages_versions
     |> dict.get(package)
-    |> result.map(fn(p) { p.releases })
+    |> result.try(fn(maybe_package) {
+      case maybe_package {
+        None -> Error(Nil)
+        Some(package) -> Ok(package.releases)
+      }
+    })
     |> result.unwrap([])
   let release =
     releases

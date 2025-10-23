@@ -35,8 +35,7 @@ pub type Model {
     /// Stores the content of the `https://hexdocs.pm/package_names.csv`.
     packages: List(String),
     /// Stores the different versions of a package.
-    /// `Dict(Package Name, hexpm.Package)`.
-    packages_versions: Dict(String, hexpm.Package),
+    packages_versions: Dict(String, Option(hexpm.Package)),
     /// Stores the open state of the sidebar.
     sidebar_opened: Bool,
     dom_click_sidebar_unsubscriber: Option(fn() -> Nil),
@@ -119,14 +118,26 @@ pub fn add_packages(model: Model, packages: List(String)) -> Model {
   Model(..model, packages:)
 }
 
-pub fn add_packages_versions(
-  model: Model,
-  packages: List(hexpm.Package),
-) -> Model {
-  use model, package <- list.fold(packages, model)
-  Model(..model, packages_versions: {
-    dict.insert(model.packages_versions, package.name, package)
-  })
+pub fn add_packages_versions(model: Model, packages: List(hexpm.Package)) {
+  let packages_versions = {
+    use packages_versions, package <- list.fold(
+      packages,
+      model.packages_versions,
+    )
+    dict.insert(packages_versions, package.name, Some(package))
+  }
+  Model(..model, packages_versions:)
+}
+
+pub fn add_missing_packages(model: Model, packages: List(String)) {
+  let packages_versions = {
+    use packages_versions, package <- list.fold(
+      packages,
+      model.packages_versions,
+    )
+    dict.insert(packages_versions, package, None)
+  }
+  Model(..model, packages_versions:)
 }
 
 pub fn toggle_sidebar(model: Model) {
@@ -233,10 +244,14 @@ pub fn update_route(model: Model, route: uri.Uri) {
           return: version.Package(package, version, resolved: True),
         )
         case dict.get(model.packages_versions, package) {
+          // We didn't index it yet
           Error(_) -> version.Package(package, version, resolved: False)
-          Ok(versions) -> {
-            case versions.releases {
-              [] -> version.Package(package, version, resolved: False)
+          // We tried but we could not find it
+          Ok(None) -> version.Package(package, version, resolved: True)
+          // We found the packages
+          Ok(Some(hex_package)) -> {
+            case hex_package.releases {
+              [] -> version.Package(package, version, resolved: True)
               [release, ..] ->
                 version.Package(package, release.version, resolved: True)
             }
@@ -244,7 +259,8 @@ pub fn update_route(model: Model, route: uri.Uri) {
         }
       }
 
-      let latest = list.filter(packages, fn(p) { p.version == "latest" })
+      let latest =
+        list.filter(packages, fn(p) { p.version == "latest" && !p.resolved })
 
       let model =
         Model(..model, search_input: q, search_packages_filters: packages)
@@ -312,10 +328,7 @@ pub fn select_autocomplete_option(model: Model, package: String) {
         Version -> {
           let version = package
           let package = model.search_packages_filter_input_displayed
-          model.packages_versions
-          |> dict.get(package)
-          |> result.map(fn(package) { package.releases })
-          |> result.try(list.find(_, fn(r) { r.version == version }))
+          find_matching_package_version(model, package, version)
           |> result.map(fn(_) {
             Model(
               ..model,
@@ -328,6 +341,22 @@ pub fn select_autocomplete_option(model: Model, package: String) {
       }
     }
   }
+}
+
+pub fn find_matching_package_version(
+  model: Model,
+  package: String,
+  version: String,
+) {
+  model.packages_versions
+  |> dict.get(package)
+  |> result.try(fn(maybe_package) {
+    case maybe_package {
+      None -> Error(Nil)
+      Some(package) -> Ok(package.releases)
+    }
+  })
+  |> result.try(list.find(_, fn(r) { r.version == version }))
 }
 
 /// When going from the home page, where you have a free text input to the
@@ -398,11 +427,12 @@ fn extract_packages_filters_or_fetches(model: Model) {
       None -> {
         case dict.get(model.packages_versions, package) {
           Error(_) -> #(filters, [package, ..packages_to_fetch])
-          Ok(versionned) -> {
-            case list.first(versionned.releases) {
+          Ok(None) -> #(filters, packages_to_fetch)
+          Ok(Some(hex_package)) -> {
+            case hex_package.releases {
               // That case is impossible, returning the neutral element.
-              Error(_) -> #(filters, packages_to_fetch)
-              Ok(release) -> {
+              [] -> #(filters, packages_to_fetch)
+              [release, ..] -> {
                 let ver = release.version
                 #(
                   [
@@ -488,12 +518,12 @@ pub fn autocomplete_versions(model: Model, search: String) {
     Error(_) -> #(model, effect.none())
     Ok(#(package, version)) -> {
       case dict.get(model.packages_versions, package) {
-        Error(_) ->
+        Error(_) | Ok(None) ->
           case list.contains(model.packages, package) {
             True -> #(model, effects.package_versions(package))
             False -> #(model, effect.none())
           }
-        Ok(package) -> {
+        Ok(Some(package)) -> {
           let versions = list.map(package.releases, fn(r) { r.version })
           let autocomplete = autocomplete.init(versions, version)
           let autocomplete = #(Version, autocomplete)

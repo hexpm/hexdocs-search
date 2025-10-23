@@ -156,15 +156,17 @@ fn api_returned_packages(
 }
 
 fn api_returned_typesense_search(model: Model, response: Loss(decode.Dynamic)) {
-  response
-  |> result.try(fn(search_result) {
-    search_result
-    |> decode.run(hexdocs.typesense_decoder())
-    |> result.map_error(loss.DecodeError)
-  })
-  |> result.map(model.set_search_results(model, _))
-  |> result.map(pair.new(_, effect.none()))
-  |> result.unwrap(#(model, effect.none()))
+  let response =
+    response
+    |> result.try(fn(search_result) {
+      search_result
+      |> decode.run(hexdocs.typesense_decoder())
+      |> result.map_error(loss.DecodeError)
+    })
+  case response {
+    Error(_) -> #(model, toast.error("Server error. Retry later."))
+    Ok(results) -> #(model.set_search_results(model, results), effect.none())
+  }
 }
 
 fn api_returned_initial_latest_packages(

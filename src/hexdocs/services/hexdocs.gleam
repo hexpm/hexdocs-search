@@ -1,14 +1,14 @@
 import gleam/bool
 import gleam/dynamic/decode
 import gleam/fetch
+import gleam/http
 import gleam/http/request
 import gleam/int
 import gleam/javascript/promise
+import gleam/json
 import gleam/list
-import gleam/option.{Some}
 import gleam/result
 import gleam/string
-import gleam/uri
 import hexdocs/config
 import hexdocs/data/model/version
 import hexdocs/endpoints
@@ -44,45 +44,63 @@ pub fn typesense_search(
   packages: List(version.Package),
   page: Int,
 ) {
-  let query = new_search_query_params(query, packages, page)
-  let endpoint = uri.Uri(..endpoints.search(), query: Some(query))
-  let assert Ok(request) = request.from_uri(endpoint)
+  let body = new_search_body(query, packages, page)
+  let endpoint = endpoints.search()
+  let assert Ok(req) = request.from_uri(endpoint)
+  let request =
+    req
+    |> request.set_method(http.Post)
+    |> request.set_header("content-type", "application/json")
+    |> request.set_body(body)
   fetch.send(request)
   |> promise.try_await(fetch.read_json_body)
   |> promise.map(result.map_error(_, loss.FetchError))
 }
 
 pub fn typesense_decoder() {
-  use found <- decode.field("found", decode.int)
-  use hits <- decode.field("hits", {
+  use results <- decode.field(
+    "results",
     decode.list({
-      use document <- decode.field("document", {
-        use doc <- decode.field("doc", decode.string)
-        use id <- decode.field("id", decode.string)
-        use package <- decode.field("package", decode.string)
-        use proglang <- decode.field("proglang", decode.string)
-        use ref <- decode.field("ref", decode.string)
-        use title <- decode.field("title", decode.string)
-        use type_ <- decode.field("type", decode.string)
-        Document(
-          doc:,
-          id:,
-          package:,
-          proglang:,
-          ref:,
-          title:,
-          type_:,
-          headers: [],
-        )
-        |> decode.success
+      use found <- decode.field("found", decode.int)
+      use hits <- decode.field("hits", {
+        decode.list({
+          use document <- decode.field("document", {
+            use doc <- decode.field("doc", decode.string)
+            use id <- decode.field("id", decode.string)
+            use package <- decode.field("package", decode.string)
+            use proglang <- decode.field("proglang", decode.string)
+            use ref <- decode.field("ref", decode.string)
+            use title <- decode.field("title", decode.string)
+            use type_ <- decode.field("type", decode.string)
+            Document(
+              doc:,
+              id:,
+              package:,
+              proglang:,
+              ref:,
+              title:,
+              type_:,
+              headers: [],
+            )
+            |> decode.success
+          })
+          decode.success(document)
+        })
       })
-      decode.success(document)
-    })
-  })
-  let grouped_results = group_headers(hits)
-  let removed_count = list.length(hits) - list.length(grouped_results)
-  let max_results = list.take(grouped_results, config.per_page())
-  decode.success(#(found - removed_count, max_results))
+      decode.success(#(found, hits))
+    }),
+  )
+
+  // Extract first result (we only send one search)
+  case results {
+    [#(found, hits), ..] -> {
+      let grouped_results = group_headers(hits)
+      let removed_count = list.length(hits) - list.length(grouped_results)
+      let max_results = list.take(grouped_results, config.per_page())
+      decode.success(#(found - removed_count, max_results))
+    }
+    [] -> decode.success(#(0, []))
+  }
 }
 
 fn group_headers(documents: List(Document)) -> List(Document) {
@@ -151,28 +169,33 @@ fn group_headers(documents: List(Document)) -> List(Document) {
   })
 }
 
-fn new_search_query_params(
+fn new_search_body(
   query: String,
   packages: List(version.Package),
   page: Int,
-) {
-  list.new()
-  |> list.key_set("q", query)
-  |> list.key_set("query_by", "title,doc")
-  |> list.key_set("query_by_weights", "3,1")
-  |> list.key_set("page", int.to_string(page))
-  // We multiply per 2 because we group results
-  |> list.key_set("per_page", int.to_string(config.per_page() * 2))
-  |> list.key_set("highlight_fields", "none")
-  |> add_filter_by_packages_param(packages)
-  |> uri.query_to_string
+) -> String {
+  let filter_by = case get_filter_by_packages(packages) {
+    "" -> []
+    filter -> [#("filter_by", json.string(filter))]
+  }
+
+  let search_params =
+    json.object([
+      #("q", json.string(query)),
+      #("query_by", json.string("title,doc")),
+      #("query_by_weights", json.string("3,1")),
+      #("page", json.int(page)),
+      #("per_page", json.int(config.per_page() * 2)),
+      #("highlight_fields", json.string("none")),
+      ..filter_by
+    ])
+
+  json.object([#("searches", json.array([search_params], fn(x) { x }))])
+  |> json.to_string
 }
 
-fn add_filter_by_packages_param(
-  query: List(#(String, String)),
-  packages: List(version.Package),
-) -> List(#(String, String)) {
-  use <- bool.guard(when: list.is_empty(packages), return: query)
+fn get_filter_by_packages(packages: List(version.Package)) -> String {
+  use <- bool.guard(when: list.is_empty(packages), return: "")
   packages
   |> list.filter_map(fn(p) {
     case p.status {
@@ -182,7 +205,6 @@ fn add_filter_by_packages_param(
   })
   |> list.map(string.append("package:=", _))
   |> string.join("||")
-  |> list.key_set(query, "filter_by", _)
 }
 
 pub fn snippet(doc: String, search_input: String) -> String {

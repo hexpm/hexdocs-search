@@ -2,7 +2,7 @@ import gleam/uri.{type Uri}
 import hexdocs/config
 
 pub fn search() -> Uri {
-  let assert Ok(uri) = uri.parse(config.search_url())
+  let assert Ok(uri) = uri.parse(config.search_url() <> "/multi_search")
   uri
 }
 

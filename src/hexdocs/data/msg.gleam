@@ -20,7 +20,6 @@ pub type Msg {
   DocumentRegisteredEventListener(unsubscriber: fn() -> Nil)
   DocumentRegisteredSidebarListener(unsubscriber: fn() -> Nil)
   DocumentChangedTheme(color_theme: ColorMode)
-  UserClickedGoBack
   UserToggledDarkMode
   UserToggledSidebar
   UserClosedSidebar

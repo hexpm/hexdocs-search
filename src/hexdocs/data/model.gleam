@@ -19,6 +19,7 @@ import hexdocs/loss
 import hexdocs/services/hex
 import hexdocs/services/hexdocs
 import lustre/effect.{type Effect}
+import modem
 
 pub type Model {
   Model(
@@ -223,8 +224,8 @@ pub fn focus_packages_filter_version_search(model: Model) {
   |> autocomplete_versions(model.search_packages_filter_version_input_displayed)
 }
 
-pub fn update_route(model: Model, route: uri.Uri) {
-  let route = route.from_uri(route)
+pub fn update_route(model: Model, uri: uri.Uri) {
+  let route = route.from_uri(uri)
   let model =
     Model(
       ..model,
@@ -235,7 +236,8 @@ pub fn update_route(model: Model, route: uri.Uri) {
       search_packages_filter_input_displayed: "",
     )
   case route {
-    route.Home | route.NotFound -> #(model, effect.none())
+    route.NotFound -> #(model, modem.load(uri))
+    route.Home -> #(model, effect.none())
     route.Search(q:, packages:) -> {
       let packages = {
         use #(package, ver) <- list.map(packages)

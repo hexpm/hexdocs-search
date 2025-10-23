@@ -24,7 +24,6 @@ import hexdocs/view/search
 import lustre
 import lustre/effect.{type Effect}
 import lustre/element/html
-import modem
 
 pub fn main() {
   let flags = Nil
@@ -66,7 +65,6 @@ fn update(model: Model, msg: Msg) {
     msg.UserToggledDarkMode -> user_toggled_dark_mode(model)
     msg.UserToggledSidebar -> model.toggle_sidebar(model)
     msg.UserClosedSidebar -> model.close_sidebar(model)
-    msg.UserClickedGoBack -> user_clicked_go_back(model)
 
     msg.UserFocusedSearch -> user_focused_search(model)
     msg.UserBlurredSearch -> model.blur_search(model)
@@ -306,10 +304,6 @@ fn user_deleted_packages_filter(
     list.filter(model.search_packages_filters, fn(f) { f != filter })
   Model(..model, search_packages_filters:)
   |> model.push_search_packages
-}
-
-fn user_clicked_go_back(model: Model) -> #(Model, Effect(msg)) {
-  #(model, modem.back(1))
 }
 
 fn user_submitted_packages_filter(model: Model) {

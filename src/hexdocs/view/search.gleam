@@ -253,7 +253,11 @@ pub fn search(model: Model) {
                               "self-stretch justify-start text-slate-700 dark:text-slate-400 text-sm font-normal leading-none",
                             ),
                           ],
-                          [html.text(version)],
+                          // You can add any loader you want here.
+                          case version {
+                            "latest" -> [html.text("Loading…")]
+                            version -> [html.text(version)]
+                          },
                         ),
                       ],
                     ),

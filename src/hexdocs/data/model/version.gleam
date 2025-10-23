@@ -1,7 +1,7 @@
 import gleam/option.{type Option, None, Some}
 import gleam/regexp
 
-const version_regexp = "^#([a-zA-Z_0-9]+)(:(([0-9]+|\\.){1,5}))?"
+const version_regexp = "^#([a-zA-Z_0-9]+)(:((([0-9]+|\\.){1,5})|latest))?"
 
 pub fn match_package(word: String) -> Result(#(String, Option(String)), Nil) {
   let regexp = version_search()

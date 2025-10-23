@@ -47,6 +47,11 @@ pub fn push(route: Route) {
   modem.push(route.path, route.query, route.fragment)
 }
 
+pub fn replace(route: Route) {
+  let route = to_uri(route)
+  modem.replace(route.path, route.query, route.fragment)
+}
+
 fn create_query(
   query: List(#(String, String)),
   packages: List(#(String, String)),

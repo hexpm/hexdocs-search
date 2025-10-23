@@ -191,22 +191,21 @@ pub fn snippet(doc: String, search_input: String) -> String {
     doc
     |> string.split(on: "\r\n\r\n")
     |> list.flat_map(string.split(_, on: "\n\n"))
+    |> list.map(string.trim)
 
-  // Get first usable paragraph (skip if starts with "#")
-  let first_paragraph = case paragraphs {
-    [first, second, ..] ->
-      case string.starts_with(string.trim(first), "#") {
-        True -> second
-        False -> first
-      }
-    [first] -> first
-    [] -> doc
-  }
+  let trimmed =
+    list.drop_while(paragraphs, fn(paragraph) {
+      string.starts_with(paragraph, "#") || string.starts_with(paragraph, ">")
+    })
+
+  let first =
+    result.or(list.first(trimmed), list.first(paragraphs))
+    |> result.unwrap(doc)
 
   // Truncate to reasonable length (around 200 characters)
-  let truncated = case string.length(first_paragraph) > 200 {
-    True -> string.slice(first_paragraph, 0, 200) <> "..."
-    False -> first_paragraph
+  let truncated = case string.length(first) > 200 {
+    True -> string.slice(first, 0, 200) <> "..."
+    False -> first
   }
 
   // Highlight search terms

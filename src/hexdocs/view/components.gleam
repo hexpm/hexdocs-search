@@ -22,7 +22,9 @@ pub fn dark_mode_toggle(model: Model) -> element.Element(msg.Msg) {
   html.button([class("p-2"), event.on_click(msg.UserToggledDarkMode)], [
     html.i(
       [
-        class("theme-icon text-xl text-slate-700 dark:text-slate-300"),
+        class(
+          "theme-icon cursor-pointer text-xl text-slate-700 dark:text-slate-300",
+        ),
         class(case model.dark_mode.mode {
           msg.Dark -> "ri-sun-line"
           msg.Light -> "ri-moon-line"

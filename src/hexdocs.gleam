@@ -316,14 +316,17 @@ fn user_submitted_packages_filter(model: Model) {
   let package = model.search_packages_filter_input
   let version = model.search_packages_filter_version_input
 
-  model.find_matching_package_version(model, package, version)
-  |> result.map(fn(_) {
+  case version {
+    "" -> model.find_matching_package_latest(model, package)
+    _ -> model.find_matching_package_version(model, package, version)
+  }
+  |> result.map(fn(release) {
     let search_packages_filters =
       [
         version.Package(
           name: package,
-          version: version,
-          status: version.Found(version),
+          version: release.version,
+          status: version.Found(release.version),
         ),
       ]
       |> list.append(model.search_packages_filters, _)

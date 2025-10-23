@@ -128,17 +128,9 @@ pub fn search(model: Model) {
                             ],
                             components.input_classes(),
                             [
-                              class("h-10 px-10 text-sm"),
+                              class("h-10 px-2 text-sm"),
                             ],
                           ]),
-                        ),
-                        html.i(
-                          [
-                            class(
-                              "ri-search-2-line absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 text-lg",
-                            ),
-                          ],
-                          [],
                         ),
                         autocomplete(
                           model,
@@ -159,7 +151,7 @@ pub fn search(model: Model) {
                           list.flatten([
                             [
                               attribute.id("search-version-input"),
-                              attribute.placeholder("ver"),
+                              attribute.placeholder("Version"),
                               attribute.type_("text"),
                               attribute.value(
                                 model.search_packages_filter_version_input_displayed,
@@ -204,7 +196,7 @@ pub fn search(model: Model) {
                     [
                       attribute.type_("submit"),
                       class(
-                        "grow bg-blue-600 hover:bg-blue-700 text-slate-100 rounded-lg h-10 flex items-center justify-center transition duration-200",
+                        "grow bg-blue-600 cursor-pointer hover:bg-blue-700 text-slate-100 rounded-lg h-10 flex items-center justify-center transition duration-200",
                       ),
                     ],
                     [
@@ -241,11 +233,23 @@ pub fn search(model: Model) {
                         ),
                       ],
                       [
-                        html.div(
+                        html.a(
                           [
                             class(
                               "self-stretch justify-start text-gray-950 dark:text-slate-50 text-md font-semibold leading-none",
                             ),
+                            attribute.target("_blank"),
+                            case filter.status {
+                              version.Found(ver) ->
+                                attribute.href(
+                                  "https://hexdocs.pm/"
+                                  <> filter.name
+                                  <> "/"
+                                  <> ver
+                                  <> "/",
+                                )
+                              _ -> class("")
+                            },
                           ],
                           [html.text(filter.name)],
                         ),
@@ -485,9 +489,15 @@ fn hexdocs_logo() {
 
 fn trash_button(filter: version.Package) {
   let on_delete = event.on_click(msg.UserDeletedPackagesFilter(filter))
-  html.div([class("h-5 relative overflow-hidden cursor-pointer"), on_delete], [
-    sidebar_icon("ri-delete-bin-5-fill"),
-  ])
+  html.div(
+    [
+      class("h-5 hover:brightness-90 relative overflow-hidden cursor-pointer"),
+      on_delete,
+    ],
+    [
+      sidebar_icon("ri-delete-bin-5-fill"),
+    ],
+  )
 }
 
 fn result_card(model: Model, document: hexdocs.Document) {

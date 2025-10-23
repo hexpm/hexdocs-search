@@ -365,11 +365,7 @@ pub fn select_autocomplete_option(model: Model, package: String) {
   }
 }
 
-pub fn find_matching_package_version(
-  model: Model,
-  package: String,
-  version: String,
-) {
+fn find_matching_package(model: Model, package: String) {
   model.packages_versions
   |> dict.get(package)
   |> result.try(fn(maybe_package) {
@@ -378,6 +374,19 @@ pub fn find_matching_package_version(
       Some(package) -> Ok(package.releases)
     }
   })
+}
+
+pub fn find_matching_package_latest(model: Model, package: String) {
+  find_matching_package(model, package)
+  |> result.try(list.first)
+}
+
+pub fn find_matching_package_version(
+  model: Model,
+  package: String,
+  version: String,
+) {
+  find_matching_package(model, package)
   |> result.try(list.find(_, fn(r) { r.version == version }))
 }
 

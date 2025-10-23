@@ -35,8 +35,7 @@ pub type Model {
     /// Stores the content of the `https://hexdocs.pm/package_names.csv`.
     packages: List(String),
     /// Stores the different versions of a package.
-    /// `Dict(Package Name, hexpm.Package)`.
-    packages_versions: Dict(String, hexpm.Package),
+    packages_versions: Dict(String, Option(hexpm.Package)),
     /// Stores the open state of the sidebar.
     sidebar_opened: Bool,
     dom_click_sidebar_unsubscriber: Option(fn() -> Nil),
@@ -71,7 +70,7 @@ pub type Model {
     search_packages_filter_version_input: String,
     search_packages_filter_version_input_displayed: String,
     /// Store the current set packages filters.
-    search_packages_filters: List(#(String, String)),
+    search_packages_filters: List(version.Package),
   )
 }
 
@@ -119,14 +118,26 @@ pub fn add_packages(model: Model, packages: List(String)) -> Model {
   Model(..model, packages:)
 }
 
-pub fn add_packages_versions(
-  model: Model,
-  packages: List(hexpm.Package),
-) -> Model {
-  use model, package <- list.fold(packages, model)
-  Model(..model, packages_versions: {
-    dict.insert(model.packages_versions, package.name, package)
-  })
+pub fn add_packages_versions(model: Model, packages: List(hexpm.Package)) {
+  let packages_versions = {
+    use packages_versions, package <- list.fold(
+      packages,
+      model.packages_versions,
+    )
+    dict.insert(packages_versions, package.name, Some(package))
+  }
+  Model(..model, packages_versions:)
+}
+
+pub fn add_missing_packages(model: Model, packages: List(String)) {
+  let packages_versions = {
+    use packages_versions, package <- list.fold(
+      packages,
+      model.packages_versions,
+    )
+    dict.insert(packages_versions, package, None)
+  }
+  Model(..model, packages_versions:)
 }
 
 pub fn toggle_sidebar(model: Model) {
@@ -226,45 +237,85 @@ pub fn update_route(model: Model, route: uri.Uri) {
   case route {
     route.Home | route.NotFound -> #(model, effect.none())
     route.Search(q:, packages:) -> {
-      case string.is_empty(q) {
-        True -> #(set_search_results(model, #(-1, [])), effect.none())
-        False -> {
-          let latest = list.filter(packages, fn(p) { p.1 == "latest" })
-          Model(..model, search_input: q, search_packages_filters: packages)
-          |> pair.new({
-            case latest {
-              [] -> effects.typesense_search(q, packages)
-              latest -> {
-                latest
-                |> list.map(pair.first)
-                |> effects.initial_latest_packages
-              }
+      let packages = {
+        use #(package, ver) <- list.map(packages)
+        use <- bool.guard(
+          when: ver != "latest",
+          return: version.Package(
+            name: package,
+            version: ver,
+            status: version.Found(ver),
+          ),
+        )
+        case dict.get(model.packages_versions, package) {
+          // We didn't index it yet
+          Error(_) ->
+            version.Package(
+              name: package,
+              version: ver,
+              status: version.Loading,
+            )
+          // We tried but we could not find it
+          Ok(None) ->
+            version.Package(
+              name: package,
+              version: ver,
+              status: version.NotFound,
+            )
+          // We found the packages
+          Ok(Some(hex_package)) -> {
+            case hex_package.releases {
+              [] ->
+                version.Package(
+                  name: package,
+                  version: ver,
+                  status: version.NotFound,
+                )
+              [release, ..] ->
+                version.Package(
+                  name: package,
+                  version: ver,
+                  status: version.Found(release.version),
+                )
             }
-          })
+          }
         }
+      }
+
+      let latest = list.filter(packages, fn(p) { p.status == version.Loading })
+
+      let model =
+        Model(..model, search_input: q, search_packages_filters: packages)
+
+      case latest {
+        [] ->
+          case string.is_empty(q) {
+            True ->
+              pair.new(set_search_results(model, #(-1, [])), effect.none())
+            False -> pair.new(model, effects.typesense_search(q, packages))
+          }
+
+        latest ->
+          pair.new(
+            model,
+            latest
+              |> list.map(fn(p) { p.name })
+              |> effects.initial_latest_packages,
+          )
       }
     }
   }
 }
 
 pub fn replace_search_packages(model: Model) {
-  let model =
-    Model(..model, search_packages_filters: {
-      use #(package, version) <- list.map(model.search_packages_filters)
-      use <- bool.guard(when: version != "latest", return: #(package, version))
-      case dict.get(model.packages_versions, package) {
-        Error(_) -> #(package, version)
-        Ok(versions) -> {
-          case versions.releases {
-            [] -> #(package, version)
-            [release, ..] -> #(package, release.version)
-          }
-        }
-      }
-    })
-  route.Search(q: model.search_input, packages: model.search_packages_filters)
+  model
+  |> model_to_search
   |> route.replace
   |> pair.new(model, _)
+}
+
+pub fn push_search_packages(model: Model) {
+  #(model, route.push(model_to_search(model)))
 }
 
 pub fn select_autocomplete_option(model: Model, package: String) {
@@ -299,10 +350,7 @@ pub fn select_autocomplete_option(model: Model, package: String) {
         Version -> {
           let version = package
           let package = model.search_packages_filter_input_displayed
-          model.packages_versions
-          |> dict.get(package)
-          |> result.map(fn(package) { package.releases })
-          |> result.try(list.find(_, fn(r) { r.version == version }))
+          find_matching_package_version(model, package, version)
           |> result.map(fn(_) {
             Model(
               ..model,
@@ -317,6 +365,22 @@ pub fn select_autocomplete_option(model: Model, package: String) {
   }
 }
 
+pub fn find_matching_package_version(
+  model: Model,
+  package: String,
+  version: String,
+) {
+  model.packages_versions
+  |> dict.get(package)
+  |> result.try(fn(maybe_package) {
+    case maybe_package {
+      None -> Error(Nil)
+      Some(package) -> Ok(package.releases)
+    }
+  })
+  |> result.try(list.find(_, fn(r) { r.version == version }))
+}
+
 /// When going from the home page, where you have a free text input to the
 /// search page, it's needed to keep the different parts of the search, while
 /// changing how they're handled in the model. That function transforms the
@@ -326,9 +390,9 @@ pub fn compute_filters_input(model: Model) -> #(Model, Effect(Msg)) {
   let search_input = keep_search_input_non_packages_text(model)
   case list.is_empty(packages_to_fetch) {
     True -> {
-      #(Model(..model, search_packages_filters: filters, search_input:), {
-        route.push(route.Search(q: search_input, packages: filters))
-      })
+      let model =
+        Model(..model, search_packages_filters: filters, search_input:)
+      push_search_packages(model)
     }
     False -> #(model, {
       use dispatch <- effect.from()
@@ -350,6 +414,15 @@ pub fn compute_filters_input(model: Model) -> #(Model, Effect(Msg)) {
   }
 }
 
+fn model_to_search(model: Model) {
+  route.Search(
+    q: model.search_input,
+    packages: list.map(model.search_packages_filters, fn(p) {
+      pair.new(p.name, p.version)
+    }),
+  )
+}
+
 /// Typical home search input will be something like `foo #phoenix #ecto:1.0.0`.
 /// `extract_packages_filters_or_fetches` will extract the `#ecto:1.0.0` part
 /// as a filter, and will return a side-effect to fetch `phoenix`, in order to
@@ -358,24 +431,46 @@ pub fn compute_filters_input(model: Model) -> #(Model, Effect(Msg)) {
 /// correct model and will reroute to the search page.
 fn extract_packages_filters_or_fetches(model: Model) {
   let segments = string.split(model.home_input_displayed, on: " ")
-  let search_packages_filters = list.filter_map(segments, version.match_package)
+  let search_packages_filters =
+    list.filter_map(segments, version.input_match_package)
   list.fold(search_packages_filters, #([], []), fn(acc, val) {
     let #(filters, packages_to_fetch) = acc
     let #(package, version) = val
     let is_existing_package = list.contains(model.packages, package)
     use <- bool.guard(when: !is_existing_package, return: acc)
     case version {
-      Some(version) -> #([#(package, version), ..filters], packages_to_fetch)
+      Some(ver) -> #(
+        [
+          version.Package(
+            name: package,
+            version: ver,
+            status: version.Found(ver),
+          ),
+          ..filters
+        ],
+        packages_to_fetch,
+      )
       None -> {
         case dict.get(model.packages_versions, package) {
           Error(_) -> #(filters, [package, ..packages_to_fetch])
-          Ok(versionned) -> {
-            case list.first(versionned.releases) {
+          Ok(None) -> #(filters, packages_to_fetch)
+          Ok(Some(hex_package)) -> {
+            case hex_package.releases {
               // That case is impossible, returning the neutral element.
-              Error(_) -> #(filters, packages_to_fetch)
-              Ok(release) -> {
-                let version = release.version
-                #([#(package, version), ..filters], packages_to_fetch)
+              [] -> #(filters, packages_to_fetch)
+              [release, ..] -> {
+                let ver = release.version
+                #(
+                  [
+                    version.Package(
+                      name: package,
+                      version: ver,
+                      status: version.Found(ver),
+                    ),
+                    ..filters
+                  ],
+                  packages_to_fetch,
+                )
               }
             }
           }
@@ -391,7 +486,7 @@ fn extract_packages_filters_or_fetches(model: Model) {
 fn keep_search_input_non_packages_text(model: Model) -> String {
   let segments = string.split(model.home_input_displayed, on: " ")
   segments
-  |> list.filter(fn(s) { version.match_package(s) |> result.is_error })
+  |> list.filter(fn(s) { version.input_match_package(s) |> result.is_error })
   |> string.join(with: " ")
 }
 
@@ -453,12 +548,12 @@ pub fn autocomplete_versions(model: Model, search: String) {
     Error(_) -> #(model, effect.none())
     Ok(#(package, version)) -> {
       case dict.get(model.packages_versions, package) {
-        Error(_) ->
+        Error(_) | Ok(None) ->
           case list.contains(model.packages, package) {
             True -> #(model, effects.package_versions(package))
             False -> #(model, effect.none())
           }
-        Ok(package) -> {
+        Ok(Some(package)) -> {
           let versions = list.map(package.releases, fn(r) { r.version })
           let autocomplete = autocomplete.init(versions, version)
           let autocomplete = #(Version, autocomplete)

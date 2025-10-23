@@ -4,7 +4,6 @@ import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
 import gleam/uri.{type Uri}
-import hexdocs/data/model/version
 import modem
 
 pub type Route {
@@ -57,7 +56,7 @@ fn create_query(
   packages: List(#(String, String)),
 ) -> List(#(String, String)) {
   use <- bool.guard(when: list.is_empty(packages), return: query)
-  let packages = list.map(packages, version.to_string)
+  let packages = list.map(packages, fn(p) { p.0 <> ":" <> p.1 })
   let packages = string.join(packages, with: ",")
   list.append(query, [#("packages", packages)])
 }
@@ -75,10 +74,9 @@ fn search_from_uri(location: Uri) {
             |> result.unwrap("")
             |> string.split(on: ",")
             |> list.filter_map(fn(package) {
-              case version.match_package(package) {
-                Ok(#(package, Some(version))) -> Ok(#(package, version))
-                Ok(_) -> Error(Nil)
-                Error(Nil) -> Error(Nil)
+              case string.split(package, ":") {
+                [name, version] -> Ok(#(name, version))
+                _ -> Error(Nil)
               }
             })
           })

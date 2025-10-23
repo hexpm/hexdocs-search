@@ -1,6 +1,7 @@
 import gleam/dynamic.{type Dynamic}
 import gleam/hexpm
 import gleam/uri
+import hexdocs/data/model/version
 import hexdocs/loss.{type Loss}
 
 pub type Msg {
@@ -9,7 +10,10 @@ pub type Msg {
   ApiReturnedPackages(Loss(String))
   ApiReturnedTypesenseSearch(Loss(Dynamic))
   ApiReturnedPackagesVersions(packages: Loss(List(hexpm.Package)))
-  ApiReturnedInitialLatestPackages(versions: Loss(List(hexpm.Package)))
+  ApiReturnedInitialLatestPackages(
+    packages: List(String),
+    versions: Loss(List(hexpm.Package)),
+  )
 
   // Application messages.
   DocumentChangedLocation(location: uri.Uri)
@@ -32,7 +36,7 @@ pub type Msg {
   UserSubmittedAutocomplete
 
   // Search page messages.
-  UserDeletedPackagesFilter(#(String, String))
+  UserDeletedPackagesFilter(version.Package)
   UserEditedPackagesFilterInput(String)
   UserEditedPackagesFilterVersion(String)
   UserEditedSearchInput(search_input: String)

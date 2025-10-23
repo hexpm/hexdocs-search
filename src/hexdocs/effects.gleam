@@ -4,6 +4,7 @@ import gleam/http/response.{type Response}
 import gleam/javascript/promise
 import gleam/list
 import gleam/result
+import hexdocs/data/model/version
 import hexdocs/data/msg
 import hexdocs/loss.{type Loss}
 import hexdocs/services/hex
@@ -44,7 +45,7 @@ pub fn initial_latest_packages(packages: List(String)) {
       }
     }
   }
-  dispatch(msg.ApiReturnedInitialLatestPackages(versions:))
+  dispatch(msg.ApiReturnedInitialLatestPackages(packages:, versions:))
 }
 
 pub fn subscribe_blurred_search() {
@@ -54,7 +55,7 @@ pub fn subscribe_blurred_search() {
   |> dispatch
 }
 
-pub fn typesense_search(query: String, packages: List(#(String, String))) {
+pub fn typesense_search(query: String, packages: List(version.Package)) {
   use dispatch <- effect.from()
   use _ <- function.tap(Nil)
   use response <- promise.map(hexdocs.typesense_search(query, packages, 1))

@@ -10,6 +10,7 @@ import gleam/result
 import gleam/string
 import gleam/uri
 import hexdocs/config
+import hexdocs/data/model/version
 import hexdocs/endpoints
 import hexdocs/loss
 
@@ -40,7 +41,7 @@ pub fn packages() {
 
 pub fn typesense_search(
   query: String,
-  packages: List(#(String, String)),
+  packages: List(version.Package),
   page: Int,
 ) {
   let query = new_search_query_params(query, packages, page)
@@ -152,7 +153,7 @@ fn group_headers(documents: List(Document)) -> List(Document) {
 
 fn new_search_query_params(
   query: String,
-  packages: List(#(String, String)),
+  packages: List(version.Package),
   page: Int,
 ) {
   list.new()
@@ -169,11 +170,16 @@ fn new_search_query_params(
 
 fn add_filter_by_packages_param(
   query: List(#(String, String)),
-  packages: List(#(String, String)),
+  packages: List(version.Package),
 ) -> List(#(String, String)) {
   use <- bool.guard(when: list.is_empty(packages), return: query)
   packages
-  |> list.map(fn(p) { p.0 <> "-" <> p.1 })
+  |> list.filter_map(fn(p) {
+    case p.status {
+      version.Found(ver) -> Ok(p.name <> "-" <> ver)
+      _ -> Error(Nil)
+    }
+  })
   |> list.map(string.append("package:=", _))
   |> string.join("||")
   |> list.key_set(query, "filter_by", _)

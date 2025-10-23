@@ -9,6 +9,7 @@ import gleam/string
 import hexdocs/config
 import hexdocs/data/model.{type Model}
 import hexdocs/data/model/autocomplete
+import hexdocs/data/model/version
 import hexdocs/data/msg
 
 import hexdocs/services/hexdocs
@@ -228,16 +229,17 @@ pub fn search(model: Model) {
                 element.fragment({
                   let sorted_filters =
                     list.sort(model.search_packages_filters, fn(a, b) {
-                      let #(package_a, _version_a) = a
-                      let #(package_b, _version_b) = b
-                      string.compare(package_a, package_b)
+                      string.compare(a.name, b.name)
                     })
 
                   use filter <- list.map(sorted_filters)
-                  let #(package, version) = filter
                   html.div([class("flex justify-between items-center mt-4")], [
                     html.div(
-                      [class("inline-flex flex-col justify-start items-start")],
+                      [
+                        class(
+                          "inline-flex flex-col justify-start items-start gap-1",
+                        ),
+                      ],
                       [
                         html.div(
                           [
@@ -245,7 +247,7 @@ pub fn search(model: Model) {
                               "self-stretch justify-start text-gray-950 dark:text-slate-50 text-md font-semibold leading-none",
                             ),
                           ],
-                          [html.text(package)],
+                          [html.text(filter.name)],
                         ),
                         html.div(
                           [
@@ -253,10 +255,24 @@ pub fn search(model: Model) {
                               "self-stretch justify-start text-slate-700 dark:text-slate-400 text-sm font-normal leading-none",
                             ),
                           ],
-                          // You can add any loader you want here.
-                          case version {
-                            "latest" -> [html.text("Loading…")]
-                            version -> [html.text(version)]
+                          case filter.status {
+                            version.Loading -> [
+                              html.text("latest (loading…)"),
+                            ]
+
+                            version.NotFound -> [
+                              html.text("latest "),
+                              html.span([class("text-red-700")], [
+                                html.text("(not found)"),
+                              ]),
+                            ]
+                            version.Found(ver) ->
+                              case filter.version {
+                                "latest" -> [
+                                  html.text("latest (" <> ver <> ")"),
+                                ]
+                                _ -> [html.text(ver)]
+                              }
                           },
                         ),
                       ],
@@ -467,7 +483,7 @@ fn hexdocs_logo() {
   ])
 }
 
-fn trash_button(filter: #(String, String)) {
+fn trash_button(filter: version.Package) {
   let on_delete = event.on_click(msg.UserDeletedPackagesFilter(filter))
   html.div([class("h-5 relative overflow-hidden cursor-pointer"), on_delete], [
     sidebar_icon("ri-delete-bin-5-fill"),

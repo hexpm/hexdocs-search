@@ -13,6 +13,7 @@ import grille_pain/lustre/toast
 import hexdocs/data/model.{type Model, Model}
 import hexdocs/data/model/autocomplete
 import hexdocs/data/model/route
+import hexdocs/data/model/version
 import hexdocs/data/msg.{type Msg}
 import hexdocs/effects
 import hexdocs/loss.{type Loss}
@@ -49,8 +50,8 @@ fn update(model: Model, msg: Msg) {
     msg.ApiReturnedPackages(response) -> api_returned_packages(model, response)
     msg.ApiReturnedTypesenseSearch(response) ->
       api_returned_typesense_search(model, response)
-    msg.ApiReturnedInitialLatestPackages(versions) ->
-      api_returned_initial_latest_packages(model, versions)
+    msg.ApiReturnedInitialLatestPackages(packages, versions) ->
+      api_returned_initial_latest_packages(model, packages, versions)
 
     msg.DocumentChangedLocation(location:) ->
       model.update_route(model, location)
@@ -165,14 +166,14 @@ fn api_returned_typesense_search(model: Model, response: Loss(decode.Dynamic)) {
 
 fn api_returned_initial_latest_packages(
   model: Model,
+  packages: List(String),
   versions: Loss(List(hexpm.Package)),
-) -> #(Model, Effect(a)) {
+) {
   case versions {
-    Error(_) -> #(model, toast.error("Server error. Retry later."))
-    Ok(versions) ->
-      model.add_packages_versions(model, versions)
-      |> model.replace_search_packages
+    Error(_) -> model.add_missing_packages(model, packages)
+    Ok(versions) -> model.add_packages_versions(model, versions)
   }
+  |> model.replace_search_packages
 }
 
 fn document_registered_event_listener(model: Model, unsubscriber: fn() -> Nil) {
@@ -257,14 +258,7 @@ fn user_edited_packages_filter_version(model: Model, content: String) {
 }
 
 fn user_submitted_search_input(model: Model) {
-  #(model, {
-    route.push({
-      route.Search(
-        q: model.search_input,
-        packages: model.search_packages_filters,
-      )
-    })
-  })
+  model.push_search_packages(model)
 }
 
 fn user_focused_search(model: Model) {
@@ -301,17 +295,12 @@ fn user_clicked_autocomplete_package(model: Model, package: String) {
 
 fn user_deleted_packages_filter(
   model: Model,
-  filter: #(String, String),
+  filter: version.Package,
 ) -> #(Model, Effect(msg)) {
   let search_packages_filters =
     list.filter(model.search_packages_filters, fn(f) { f != filter })
-  let model = Model(..model, search_packages_filters:)
-  #(model, {
-    route.push(route.Search(
-      q: model.search_input,
-      packages: model.search_packages_filters,
-    ))
-  })
+  Model(..model, search_packages_filters:)
+  |> model.push_search_packages
 }
 
 fn user_clicked_go_back(model: Model) -> #(Model, Effect(msg)) {
@@ -321,27 +310,29 @@ fn user_clicked_go_back(model: Model) -> #(Model, Effect(msg)) {
 fn user_submitted_packages_filter(model: Model) {
   let package = model.search_packages_filter_input
   let version = model.search_packages_filter_version_input
-  model.packages_versions
-  |> dict.get(package)
-  |> result.map(fn(package) { package.releases })
-  |> result.try(list.find(_, fn(r) { r.version == version }))
+
+  model.find_matching_package_version(model, package, version)
   |> result.map(fn(_) {
     let search_packages_filters =
-      [#(package, version)]
+      [
+        version.Package(
+          name: package,
+          version: version,
+          status: version.Found(version),
+        ),
+      ]
       |> list.append(model.search_packages_filters, _)
       |> list.unique
-    let model =
-      Model(
-        ..model,
-        search_packages_filters:,
-        search_packages_filter_input: "",
-        search_packages_filter_input_displayed: "",
-        search_packages_filter_version_input: "",
-        search_packages_filter_version_input_displayed: "",
-      )
-    route.Search(q: model.search_input, packages: model.search_packages_filters)
-    |> route.push
-    |> pair.new(model, _)
+
+    Model(
+      ..model,
+      search_packages_filters:,
+      search_packages_filter_input: "",
+      search_packages_filter_input_displayed: "",
+      search_packages_filter_version_input: "",
+      search_packages_filter_version_input_displayed: "",
+    )
+    |> model.push_search_packages
   })
   |> result.lazy_unwrap(fn() { #(model, effect.none()) })
 }
@@ -384,7 +375,12 @@ fn user_selected_package_filter_version(model: Model) {
   let releases =
     model.packages_versions
     |> dict.get(package)
-    |> result.map(fn(p) { p.releases })
+    |> result.try(fn(maybe_package) {
+      case maybe_package {
+        None -> Error(Nil)
+        Some(package) -> Ok(package.releases)
+      }
+    })
     |> result.unwrap([])
   let release =
     releases

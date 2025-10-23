@@ -13,6 +13,7 @@ import grille_pain/lustre/toast
 import hexdocs/data/model.{type Model, Model}
 import hexdocs/data/model/autocomplete
 import hexdocs/data/model/route
+import hexdocs/data/model/version
 import hexdocs/data/msg.{type Msg}
 import hexdocs/effects
 import hexdocs/loss.{type Loss}
@@ -168,7 +169,7 @@ fn api_returned_initial_latest_packages(
   versions: Loss(List(hexpm.Package)),
 ) -> #(Model, Effect(a)) {
   case versions {
-    Error(_) -> #(model, toast.error("Server error. Retry later."))
+    Error(_) -> model.replace_search_packages(model)
     Ok(versions) ->
       model.add_packages_versions(model, versions)
       |> model.replace_search_packages
@@ -257,14 +258,7 @@ fn user_edited_packages_filter_version(model: Model, content: String) {
 }
 
 fn user_submitted_search_input(model: Model) {
-  #(model, {
-    route.push({
-      route.Search(
-        q: model.search_input,
-        packages: model.search_packages_filters,
-      )
-    })
-  })
+  model.push_search_packages(model)
 }
 
 fn user_focused_search(model: Model) {
@@ -301,17 +295,12 @@ fn user_clicked_autocomplete_package(model: Model, package: String) {
 
 fn user_deleted_packages_filter(
   model: Model,
-  filter: #(String, String),
+  filter: version.Package,
 ) -> #(Model, Effect(msg)) {
   let search_packages_filters =
     list.filter(model.search_packages_filters, fn(f) { f != filter })
-  let model = Model(..model, search_packages_filters:)
-  #(model, {
-    route.push(route.Search(
-      q: model.search_input,
-      packages: model.search_packages_filters,
-    ))
-  })
+  Model(..model, search_packages_filters:)
+  |> model.push_search_packages
 }
 
 fn user_clicked_go_back(model: Model) -> #(Model, Effect(msg)) {
@@ -327,21 +316,19 @@ fn user_submitted_packages_filter(model: Model) {
   |> result.try(list.find(_, fn(r) { r.version == version }))
   |> result.map(fn(_) {
     let search_packages_filters =
-      [#(package, version)]
+      [version.Package(name: package, version: version, resolved: True)]
       |> list.append(model.search_packages_filters, _)
       |> list.unique
-    let model =
-      Model(
-        ..model,
-        search_packages_filters:,
-        search_packages_filter_input: "",
-        search_packages_filter_input_displayed: "",
-        search_packages_filter_version_input: "",
-        search_packages_filter_version_input_displayed: "",
-      )
-    route.Search(q: model.search_input, packages: model.search_packages_filters)
-    |> route.push
-    |> pair.new(model, _)
+
+    Model(
+      ..model,
+      search_packages_filters:,
+      search_packages_filter_input: "",
+      search_packages_filter_input_displayed: "",
+      search_packages_filter_version_input: "",
+      search_packages_filter_version_input_displayed: "",
+    )
+    |> model.push_search_packages
   })
   |> result.lazy_unwrap(fn() { #(model, effect.none()) })
 }

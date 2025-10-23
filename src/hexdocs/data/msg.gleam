@@ -1,6 +1,7 @@
 import gleam/dynamic.{type Dynamic}
 import gleam/hexpm
 import gleam/uri
+import hexdocs/data/model/version
 import hexdocs/loss.{type Loss}
 
 pub type Msg {
@@ -32,7 +33,7 @@ pub type Msg {
   UserSubmittedAutocomplete
 
   // Search page messages.
-  UserDeletedPackagesFilter(#(String, String))
+  UserDeletedPackagesFilter(version.Package)
   UserEditedPackagesFilterInput(String)
   UserEditedPackagesFilterVersion(String)
   UserEditedSearchInput(search_input: String)

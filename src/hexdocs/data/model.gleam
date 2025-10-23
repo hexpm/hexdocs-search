@@ -236,8 +236,7 @@ pub fn update_route(model: Model, uri: uri.Uri) {
       search_packages_filter_input_displayed: "",
     )
   case route {
-    route.NotFound -> #(model, modem.load(uri))
-    route.Home -> #(model, effect.none())
+    route.Home | route.NotFound -> #(model, effect.none())
     route.Search(q:, packages:) -> {
       let packages = {
         use #(package, ver) <- list.map(packages)

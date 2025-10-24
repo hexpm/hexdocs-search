@@ -67,35 +67,24 @@ pub fn hint() {
   h.div([a.class("relative mx-6")], [
     h.div(
       [
-        a.class("absolute"),
-        a.class("w-64 h-72"),
-        a.class("bottom-0"),
-        a.class("right-0"),
-        a.class("bg-gray-50"),
-        a.class("dark:bg-gray-700"),
-        a.class("rounded-tl-xl"),
-        a.class("rounded-tr-xl"),
-        a.class("z-10"),
+        a.class("relative lg:absolute w-64 h-72 bottom-0 right-0 z-10"),
+        a.class("p-3 mt-16 lg:mt-0"),
+        a.class("bg-gray-50 dark:bg-gray-700"),
+        a.class("rounded-tl-xl rounded-tr-xl"),
       ],
       [
         h.div(
           [
-            a.class("w-14"),
-            a.class("h-14"),
-            a.class("bg-gray-100"),
-            a.class("dark:bg-gray-800"),
+            a.class("w-14 h-14"),
+            a.class("bg-gray-100 dark:bg-gray-800"),
             a.class("rounded-full"),
-            a.class("flex"),
-            a.class("items-center"),
-            a.class("justify-center"),
-            a.class("m-3"),
+            a.class("flex items-center justify-center"),
           ],
           [
             h.i(
               [
                 a.class("ri-contacts-book-upload-line"),
-                a.class("text-gray-600"),
-                a.class("dark:text-gray-100"),
+                a.class("text-gray-600 dark:text-gray-100"),
                 a.class("text-xl"),
               ],
               [],

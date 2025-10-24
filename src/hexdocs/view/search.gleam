@@ -242,7 +242,8 @@ pub fn search(model: Model) {
                             case filter.status {
                               version.Found(ver) ->
                                 attribute.href(
-                                  "https://hexdocs.pm/"
+                                  config.hexdocs_url()
+                                  <> "/"
                                   <> filter.name
                                   <> "/"
                                   <> ver
@@ -509,7 +510,9 @@ fn result_card(model: Model, document: hexdocs.Document) {
     html.a(
       [
         attribute.href(link_url),
-        class("text-green-700 dark:text-green-400 text-sm hover:underline"),
+        class(
+          "text-green-700 dark:text-green-400 text-sm hover:underline break-all",
+        ),
       ],
       [html.text(display_url)],
     ),

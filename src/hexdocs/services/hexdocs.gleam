@@ -195,16 +195,18 @@ fn new_search_body(
 }
 
 fn get_filter_by_packages(packages: List(version.Package)) -> String {
-  use <- bool.guard(when: list.is_empty(packages), return: "")
-  packages
-  |> list.filter_map(fn(p) {
-    case p.status {
-      version.Found(ver) -> Ok(p.name <> "-" <> ver)
-      _ -> Error(Nil)
-    }
-  })
-  |> list.map(string.append("package:=", _))
-  |> string.join("||")
+  let filtered_packages =
+    packages
+    |> list.filter_map(fn(p) {
+      case p.status {
+        version.Found(ver) -> Ok("`" <> p.name <> "-" <> ver <> "`")
+        _ -> Error(Nil)
+      }
+    })
+  case filtered_packages {
+    [] -> ""
+    _ -> "package:=" <> "[" <> string.join(filtered_packages, ",") <> "]"
+  }
 }
 
 pub fn snippet(doc: String, search_input: String) -> String {

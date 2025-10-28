@@ -311,7 +311,7 @@ pub fn search(model: Model) {
                         _ -> decode.failure(msg.UserSubmittedSearchInput, "Key")
                       }
                     }),
-                    attribute.placeholder("Search for packages..."),
+                    attribute.placeholder("Search documentation..."),
                     attribute.type_("text"),
                   ],
                   components.input_classes(),

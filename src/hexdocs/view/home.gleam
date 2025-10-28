@@ -88,7 +88,7 @@ pub fn home(model: Model) {
                           components.input_classes(),
                           [
                             class("px-10 py-3"),
-                            attribute.placeholder("Search for packages..."),
+                            attribute.placeholder("Search documentation..."),
                           ],
                         ]),
                       ),

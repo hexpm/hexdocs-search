@@ -113,6 +113,8 @@ pub fn search(model: Model) {
                           list.flatten([
                             [
                               attribute.id("search-package-input"),
+                              attribute.autocapitalize("off"),
+                              attribute.autocomplete("off"),
                               attribute.placeholder("Package Name"),
                               attribute.type_("text"),
                               attribute.value(
@@ -151,6 +153,8 @@ pub fn search(model: Model) {
                           list.flatten([
                             [
                               attribute.id("search-version-input"),
+                              attribute.autocapitalize("off"),
+                              attribute.autocomplete("off"),
                               attribute.placeholder("Version"),
                               attribute.type_("text"),
                               attribute.value(

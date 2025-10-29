@@ -56,3 +56,11 @@ href = "/favicon/apple-touch-icon.png"
 [[tools.lustre.html.links]]
 rel = "manifest"
 href = "/favicon/site.webmanifest"
+
+[[tools.lustre.html.scripts]]
+async = true
+defer = true
+src = "https://s.hexdocs.pm/js/script.js"
+
+[[tools.lustre.html.scripts]]
+content = """window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init({endpoint:"https://s.hexdocs.pm/api/event"})"""

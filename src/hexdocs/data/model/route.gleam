@@ -73,12 +73,7 @@ fn search_from_uri(location: Uri) {
             list.key_find(query, "packages")
             |> result.unwrap("")
             |> string.split(on: ",")
-            |> list.filter_map(fn(package) {
-              case string.split(package, ":") {
-                [name, version] -> Ok(#(name, version))
-                _ -> Error(Nil)
-              }
-            })
+            |> list.filter_map(fn(package) { string.split_once(package, ":") })
           })
         }
       }

@@ -506,8 +506,7 @@ fn trash_button(filter: version.Package) {
 }
 
 fn result_card(model: Model, document: hexdocs.Document) {
-  let display_url =
-    "/" <> string.replace(document.package, "-", "/") <> "/" <> document.ref
+  let display_url = hexdocs.package_path(document) <> "/" <> document.ref
   let link_url = config.hexdocs_url() <> display_url
 
   html.div([class("w-full bg-slate-100 dark:bg-slate-800 rounded-2xl p-4")], [
@@ -546,10 +545,7 @@ fn result_card(model: Model, document: hexdocs.Document) {
           html.ul([class("space-y-1")], {
             list.map(document.headers, fn(header: hexdocs.Header) {
               let header_display_url =
-                "/"
-                <> string.replace(document.package, "-", "/")
-                <> "/"
-                <> header.ref
+                hexdocs.package_path(document) <> "/" <> header.ref
               let header_link_url = config.hexdocs_url() <> header_display_url
 
               html.li(

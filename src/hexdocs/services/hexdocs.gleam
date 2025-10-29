@@ -1,4 +1,3 @@
-import gleam/bool
 import gleam/dynamic/decode
 import gleam/fetch
 import gleam/http
@@ -55,6 +54,13 @@ pub fn typesense_search(
   fetch.send(request)
   |> promise.try_await(fetch.read_json_body)
   |> promise.map(result.map_error(_, loss.FetchError))
+}
+
+pub fn package_path(document: Document) {
+  case string.split_once(document.package, "-") {
+    Ok(#(package, version)) -> package <> "/" <> version
+    Error(Nil) -> document.package
+  }
 }
 
 pub fn typesense_decoder() {

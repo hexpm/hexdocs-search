@@ -58,8 +58,8 @@ pub fn typesense_search(
 
 pub fn package_path(document: Document) {
   case string.split_once(document.package, "-") {
-    Ok(#(package, version)) -> package <> "/" <> version
-    Error(Nil) -> document.package
+    Ok(#(package, version)) -> "/" <> package <> "/" <> version
+    Error(Nil) -> "/" <> document.package
   }
 }
 

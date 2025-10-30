@@ -215,10 +215,9 @@ pub fn search(model: Model) {
             html.hr([class("mt-6 border-slate-200 dark:border-slate-700")]),
             case list.is_empty(model.search_packages_filters) {
               True -> {
-                html.div([class("text-slate-700 dark:text-slate-300 pt-4")], [
-                  html.text(
-                    "No package selected, searching all packages and all versions.",
-                  ),
+                html.div([class("text-red-700 pt-4")], [
+                  html.span([class("ri-error-warning-line mr-1")], []),
+                  html.text("Select one or more packages to search..."),
                 ])
               }
               False -> {

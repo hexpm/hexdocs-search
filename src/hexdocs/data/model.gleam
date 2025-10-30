@@ -293,7 +293,14 @@ pub fn update_route(model: Model, uri: uri.Uri) {
           case string.is_empty(q) {
             True ->
               pair.new(set_search_results(model, #(-1, [])), effect.none())
-            False -> pair.new(model, effects.typesense_search(q, packages))
+            False ->
+              case packages {
+                [] -> {
+                  let model = Model(..model, sidebar_opened: True)
+                  pair.new(set_search_results(model, #(-1, [])), effect.none())
+                }
+                _ -> pair.new(model, effects.typesense_search(q, packages))
+              }
           }
 
         latest ->

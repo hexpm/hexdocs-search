@@ -110,7 +110,7 @@ pub fn home(model: Model) {
                           "px-6 py-3 bg-blue-600 dark:bg-blue-600 text-gray-50 rounded-lg hover:bg-blue-700 transition duration-200 whitespace-nowrap w-full sm:w-auto",
                         ),
                       ],
-                      [html.text("Search Packages")],
+                      [html.text("Search")],
                     ),
                   ],
                 ),

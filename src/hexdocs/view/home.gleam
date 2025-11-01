@@ -122,7 +122,7 @@ pub fn home(model: Model) {
                           "text-gray-700 dark:text-gray-100 text-xl font-semibold leading-loose",
                         ),
                       ],
-                      [html.text("To search specific packages")],
+                      [html.text("List which packages to search")],
                     ),
                     html.span(
                       [
@@ -139,11 +139,7 @@ pub fn home(model: Model) {
                         class("text-gray-600 dark:text-gray-200"),
                       ],
                       [
-                        html.text(
-                          " to scope your search to one or more packages.",
-                        ),
-                        html.br([]),
-                        html.text("Use "),
+                        html.text(" to select a package, "),
                       ],
                     ),
                     html.span(
@@ -154,7 +150,23 @@ pub fn home(model: Model) {
                       [
                         class("text-gray-600 dark:text-gray-200"),
                       ],
-                      [html.text(" to pick a specific version.")],
+                      [
+                        html.text(" to pick a version"),
+                        html.br([]),
+                        html.text("Run "),
+                      ],
+                    ),
+                    html.span(
+                      [class("bg-black px-0.5 text-gray-50 font-mono rounded")],
+                      [html.text("mix hex.search")],
+                    ),
+                    html.span(
+                      [attribute.class("text-gray-600 dark:text-gray-200")],
+                      [
+                        html.text(
+                          " in your project to search across its dependencies",
+                        ),
+                      ],
                     ),
                   ]),
                   html.div([attribute.class("mt-10")], [

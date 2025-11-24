@@ -46,7 +46,7 @@ href = "/favicon/favicon.svg"
 
 [[tools.lustre.html.links]]
 rel = "shortcut icon"
-href = "/favicon/favicon.ico"
+href = "/favicon.ico"
 
 [[tools.lustre.html.links]]
 rel = "apple-touch-icon"

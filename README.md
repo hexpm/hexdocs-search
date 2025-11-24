@@ -30,6 +30,13 @@ gleam run -m lustre/dev build
 
 Then you can deploy the contents of the `dist/` folder.
 
+## Deployment
+
+```
+$ git pull origin main
+$ git push origin main:prod
+```
+
 ## Quick reminder of the structure
 
 - All source files reside in `src` folder.

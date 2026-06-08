@@ -5,7 +5,7 @@ application running in client, interacting with the backend through asynchronous
 HTTP requests.
 
 Running a Lustre application can easily be achieved using [Gleam](https://gleam.run/)
-and the [Lustre Dev Tools](https://hexdocs.pm/lustre_dev_tools/).
+and the [Lustre Dev Tools](https://lustre-dev-tools.hexdocs.pm/).
 Lustre Dev Tools is a companion package to Lustre, in charge of compiling,
 bundling, and running the application in browser.
 

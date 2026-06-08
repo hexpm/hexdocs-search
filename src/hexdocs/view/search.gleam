@@ -245,9 +245,7 @@ pub fn search(model: Model) {
                             case filter.status {
                               version.Found(ver) ->
                                 attribute.href(
-                                  config.hexdocs_url()
-                                  <> "/"
-                                  <> filter.name
+                                  config.hexdocs_package_url(filter.name)
                                   <> "/"
                                   <> ver
                                   <> "/",
@@ -505,8 +503,8 @@ fn trash_button(filter: version.Package) {
 }
 
 fn result_card(model: Model, document: hexdocs.Document) {
-  let display_url = hexdocs.package_path(document) <> "/" <> document.ref
-  let link_url = config.hexdocs_url() <> display_url
+  let display_url = hexdocs.doc_path(document, document.ref)
+  let link_url = hexdocs.doc_url(document, document.ref)
 
   html.div([class("w-full bg-slate-100 dark:bg-slate-800 rounded-2xl p-4")], [
     html.a(
@@ -543,9 +541,8 @@ fn result_card(model: Model, document: hexdocs.Document) {
           ),
           html.ul([class("space-y-1")], {
             list.map(document.headers, fn(header: hexdocs.Header) {
-              let header_display_url =
-                hexdocs.package_path(document) <> "/" <> header.ref
-              let header_link_url = config.hexdocs_url() <> header_display_url
+              let header_display_url = hexdocs.doc_path(document, header.ref)
+              let header_link_url = hexdocs.doc_url(document, header.ref)
 
               html.li(
                 [

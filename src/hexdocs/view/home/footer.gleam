@@ -103,7 +103,7 @@ pub fn hint() {
             h.a(
               [
                 a.class("text-blue-600 font-medium"),
-                a.href("https://hexdocs.pm/hex/Mix.Tasks.Hex.Publish.html"),
+                a.href("https://hex.hexdocs.pm/Mix.Tasks.Hex.Publish.html"),
               ],
               [h.text("here")],
             ),
@@ -121,7 +121,7 @@ pub fn hint() {
             h.a(
               [
                 a.class("text-blue-600 font-medium"),
-                a.href("https://hexdocs.pm/elixir/writing-documentation.html"),
+                a.href("https://elixir.hexdocs.pm/writing-documentation.html"),
               ],
               [h.text("here")],
             ),

@@ -56,11 +56,27 @@ pub fn typesense_search(
   |> promise.map(result.map_error(_, loss.FetchError))
 }
 
-pub fn package_path(document: Document) {
+/// Splits a `package-version` document identifier into its package name and
+/// the version path segment (empty when no version is present).
+fn package_segments(document: Document) -> #(String, String) {
   case string.split_once(document.package, "-") {
-    Ok(#(package, version)) -> "/" <> package <> "/" <> version
-    Error(Nil) -> "/" <> document.package
+    Ok(#(package, version)) -> #(package, "/" <> version)
+    Error(Nil) -> #(document.package, "")
   }
+}
+
+/// Human-readable form of a documentation URL without the scheme, using the
+/// package as a subdomain, e.g. `phoenix.hexdocs.pm/1.7.0/Phoenix.html`.
+pub fn doc_path(document: Document, ref: String) -> String {
+  let #(package, version) = package_segments(document)
+  config.hexdocs_package_host(package) <> version <> "/" <> ref
+}
+
+/// Full documentation URL for a document reference, e.g.
+/// `https://phoenix.hexdocs.pm/1.7.0/Phoenix.html`.
+pub fn doc_url(document: Document, ref: String) -> String {
+  let #(package, version) = package_segments(document)
+  config.hexdocs_package_url(package) <> version <> "/" <> ref
 }
 
 pub fn typesense_decoder() {

@@ -185,32 +185,36 @@ pub fn home(model: Model) {
                       [html.text("Visit ")],
                     ),
                     html.span(
+                      [attribute.class("text-gray-600 dark:text-gray-200")],
+                      [html.text("<package>")],
+                    ),
+                    html.span(
                       [
                         attribute.class(
                           "text-blue-600 dark:text-blue-600 font-semibold",
                         ),
                       ],
-                      [html.text("hexdocs.pm/")],
-                    ),
-                    html.span(
-                      [attribute.class("text-gray-600 dark:text-gray-200")],
-                      [html.text("<package>")],
+                      [html.text(".hexdocs.pm")],
                     ),
                     html.span(
                       [attribute.class("text-gray-600 dark:text-gray-200")],
                       [html.text(" or ")],
                     ),
                     html.span(
+                      [attribute.class("text-gray-600 dark:text-gray-200")],
+                      [html.text("<package>")],
+                    ),
+                    html.span(
                       [
                         attribute.class(
                           "text-blue-600 dark:text-blue-600 font-semibold",
                         ),
                       ],
-                      [html.text("hexdocs.pm/")],
+                      [html.text(".hexdocs.pm/")],
                     ),
                     html.span(
                       [attribute.class("text-gray-600 dark:text-gray-200")],
-                      [html.text("<package>/<version>")],
+                      [html.text("<version>")],
                     ),
                   ]),
                 ]),

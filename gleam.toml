@@ -35,14 +35,14 @@ stylesheets = [
 
 [[tools.lustre.html.links]]
 rel = "icon"
-href = "/favicon/favicon-96x96.png"
+href = "/assets/favicon-96x96.png"
 sizes="96x96"
 type = "image/png"
 
 [[tools.lustre.html.links]]
 rel = "icon"
 type = "image/svg+xml"
-href = "/favicon/favicon.svg"
+href = "/assets/favicon.svg"
 
 [[tools.lustre.html.links]]
 rel = "shortcut icon"
@@ -51,11 +51,11 @@ href = "/favicon.ico"
 [[tools.lustre.html.links]]
 rel = "apple-touch-icon"
 sizes = "180x180"
-href = "/favicon/apple-touch-icon.png"
+href = "/assets/apple-touch-icon.png"
 
 [[tools.lustre.html.links]]
 rel = "manifest"
-href = "/favicon/site.webmanifest"
+href = "/assets/site.webmanifest"
 
 [[tools.lustre.html.scripts]]
 async = true

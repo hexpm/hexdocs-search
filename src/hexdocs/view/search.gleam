@@ -245,10 +245,10 @@ pub fn search(model: Model) {
                             case filter.status {
                               version.Found(ver) ->
                                 attribute.href(
-                                  config.hexdocs_package_url(filter.name)
-                                  <> "/"
-                                  <> ver
-                                  <> "/",
+                                  config.hexdocs_package_version_url(
+                                    filter.name,
+                                    ver,
+                                  ),
                                 )
                               _ -> class("")
                             },

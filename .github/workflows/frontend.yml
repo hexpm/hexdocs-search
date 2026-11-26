@@ -2,6 +2,9 @@ name: Lustre Frontend CI
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test Lustre Frontend

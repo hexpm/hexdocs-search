@@ -2,16 +2,21 @@ name: Lustre Frontend CI
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test Lustre Frontend
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Install OTP and Gleam
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           otp-version: 27.2
           gleam-version: 1.12.0
